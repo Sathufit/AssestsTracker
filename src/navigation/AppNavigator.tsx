@@ -17,6 +17,7 @@ import LoginScreen from '../screens/Auth/LoginScreen';
 import HomeScreen from '../screens/Home/HomeScreen';
 import ScannerScreen from '../screens/Scanner/ScannerScreen';
 import AssetDetailsScreen from '../screens/Assets/AssetDetailsScreen';
+import AssetListScreen from '../screens/Assets/AssetListScreen';
 import EditAssetScreen from '../screens/Assets/EditAssetScreen';
 import ImportScreen from '../screens/Import/ImportScreen';
 import DashboardScreen from '../screens/Dashboard/DashboardScreen';
@@ -70,6 +71,11 @@ function MainNavigator() {
         name="Home" 
         component={HomeScreen}
         options={{ title: 'Asset Tracker' }}
+      />
+      <MainStack.Screen 
+        name="AssetList" 
+        component={AssetListScreen}
+        options={{ title: 'All Assets' }}
       />
       <MainStack.Screen 
         name="Scanner" 

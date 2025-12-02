@@ -1,14 +1,13 @@
 /**
  * Edit Asset Screen  
- * Form for creating/editing assets with validation
+ * Form for creating/editing assets - No validation, all fields optional
  */
 
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { TextInput, Button, Switch, Text, useTheme } from 'react-native-paper';
+import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { Formik } from 'formik';
 import { createAsset, updateAsset, getAssetById } from '../../api/assets';
-import { assetValidationSchema } from '../../utils/validation';
 import { AssetFormValues } from '../../types';
 import { spacing } from '../../theme';
 import { useAuth } from '../../hooks';
@@ -19,22 +18,26 @@ export default function EditAssetScreen({ route, navigation }: any) {
   const { assetId } = route.params || {};
   const [loading, setLoading] = useState(false);
   const [initialValues, setInitialValues] = useState<AssetFormValues>({
-    qrCode: '',
-    assetId: '',
-    assetType: '',
-    category: '',
+    assetNumber: '',
+    description: '',
+    assetRegister: '',
+    shortDescription: '',
+    commissionDate: '',
     manufacturer: '',
     model: '',
+    supplyCondition: '',
+    qrCode: '',
+    category: '',
     serialNumber: '',
-    status: 'in-use',
-    outOfServiceReason: '',
-    locationType: 'rac-room',
+    status: undefined,
+    condition: undefined,
+    ownership: undefined,
+    locationType: undefined,
     locationId: '',
+    dateAssigned: '',
     building: '',
     floor: '',
-    ownership: 'facility-owned',
-    condition: 'good',
-    locationNotes: '',
+    outOfServiceReason: '',
     serviceFrequency: '',
     lastServiceDate: '',
     calibrationRequired: false,
@@ -53,25 +56,29 @@ export default function EditAssetScreen({ route, navigation }: any) {
       const asset = await getAssetById(assetId);
       if (asset) {
         setInitialValues({
-          qrCode: asset.qrCode,
-          assetId: asset.assetId,
-          assetType: asset.assetType,
-          category: asset.category,
+          assetNumber: asset.assetNumber || '',
+          description: asset.description || '',
+          assetRegister: asset.assetRegister || '',
+          shortDescription: asset.shortDescription || '',
+          commissionDate: asset.commissionDate || '',
           manufacturer: asset.manufacturer || '',
           model: asset.model || '',
+          supplyCondition: asset.supplyCondition || '',
+          qrCode: asset.qrCode || '',
+          category: asset.category || '',
           serialNumber: asset.serialNumber || '',
           status: asset.status,
           condition: asset.condition,
-          outOfServiceReason: asset.outOfServiceReason || '',
           ownership: asset.ownership,
           locationType: asset.locationType,
           locationId: asset.locationId || '',
-          building: '',
-          floor: '',
-          locationNotes: '',
+          dateAssigned: asset.dateAssigned || '',
+          building: asset.building || '',
+          floor: asset.floor || '',
+          outOfServiceReason: asset.outOfServiceReason || '',
           serviceFrequency: asset.serviceFrequency || '',
           lastServiceDate: asset.lastServiceDate || '',
-          calibrationRequired: asset.calibrationRequired,
+          calibrationRequired: asset.calibrationRequired || false,
           calibrationFrequency: asset.calibrationFrequency || '',
           safeWorkingLoad: asset.safeWorkingLoad?.toString() || '',
         });
@@ -107,54 +114,59 @@ export default function EditAssetScreen({ route, navigation }: any) {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Formik
         initialValues={initialValues}
-        validationSchema={assetValidationSchema}
         onSubmit={handleSubmit}
         enableReinitialize
       >
-        {({ handleChange, handleBlur, handleSubmit, setFieldValue, values, errors, touched }) => (
+        {({ handleChange, handleBlur, handleSubmit, values }) => (
           <ScrollView contentContainerStyle={styles.content}>
-            {/* Basic Information */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>Basic Information</Text>
+            {/* Core Information - Matching Excel Structure */}
+            <Text variant="titleMedium" style={styles.sectionTitle}>Asset Information</Text>
             
             <TextInput
-              label="QR Code *"
-              value={values.qrCode}
-              onChangeText={handleChange('qrCode')}
-              onBlur={handleBlur('qrCode')}
-              error={touched.qrCode && !!errors.qrCode}
+              label="Asset Number"
+              value={values.assetNumber}
+              onChangeText={handleChange('assetNumber')}
+              onBlur={handleBlur('assetNumber')}
               style={styles.input}
               mode="outlined"
             />
-            {touched.qrCode && errors.qrCode && <Text style={styles.errorText}>{errors.qrCode}</Text>}
 
             <TextInput
-              label="Asset ID (Tag Number) *"
-              value={values.assetId}
-              onChangeText={handleChange('assetId')}
-              onBlur={handleBlur('assetId')}
-              error={touched.assetId && !!errors.assetId}
+              label="Description"
+              value={values.description}
+              onChangeText={handleChange('description')}
+              onBlur={handleBlur('description')}
+              multiline
+              numberOfLines={2}
               style={styles.input}
               mode="outlined"
             />
-            {touched.assetId && errors.assetId && <Text style={styles.errorText}>{errors.assetId}</Text>}
 
             <TextInput
-              label="Asset Type *"
-              value={values.assetType}
-              onChangeText={handleChange('assetType')}
-              onBlur={handleBlur('assetType')}
-              error={touched.assetType && !!errors.assetType}
+              label="Asset Register"
+              value={values.assetRegister}
+              onChangeText={handleChange('assetRegister')}
+              onBlur={handleBlur('assetRegister')}
+              placeholder="e.g., OPASSET"
               style={styles.input}
               mode="outlined"
             />
-            {touched.assetType && errors.assetType && <Text style={styles.errorText}>{errors.assetType}</Text>}
 
             <TextInput
-              label="Category *"
-              value={values.category}
-              onChangeText={handleChange('category')}
-              onBlur={handleBlur('category')}
-              error={touched.category && !!errors.category}
+              label="Short Description"
+              value={values.shortDescription}
+              onChangeText={handleChange('shortDescription')}
+              onBlur={handleBlur('shortDescription')}
+              style={styles.input}
+              mode="outlined"
+            />
+
+            <TextInput
+              label="Commission Date"
+              value={values.commissionDate}
+              onChangeText={handleChange('commissionDate')}
+              onBlur={handleBlur('commissionDate')}
+              placeholder="YYYY-MM-DD"
               style={styles.input}
               mode="outlined"
             />
@@ -163,6 +175,7 @@ export default function EditAssetScreen({ route, navigation }: any) {
               label="Manufacturer"
               value={values.manufacturer}
               onChangeText={handleChange('manufacturer')}
+              onBlur={handleBlur('manufacturer')}
               style={styles.input}
               mode="outlined"
             />
@@ -171,6 +184,36 @@ export default function EditAssetScreen({ route, navigation }: any) {
               label="Model"
               value={values.model}
               onChangeText={handleChange('model')}
+              onBlur={handleBlur('model')}
+              style={styles.input}
+              mode="outlined"
+            />
+
+            <TextInput
+              label="Supply Condition"
+              value={values.supplyCondition}
+              onChangeText={handleChange('supplyCondition')}
+              onBlur={handleBlur('supplyCondition')}
+              placeholder="e.g., New, Used, Repaired"
+              style={styles.input}
+              mode="outlined"
+            />
+
+            {/* Optional Fields */}
+            <Text variant="titleMedium" style={styles.sectionTitle}>Additional Information (Optional)</Text>
+            
+            <TextInput
+              label="QR Code"
+              value={values.qrCode}
+              onChangeText={handleChange('qrCode')}
+              style={styles.input}
+              mode="outlined"
+            />
+
+            <TextInput
+              label="Category"
+              value={values.category}
+              onChangeText={handleChange('category')}
               style={styles.input}
               mode="outlined"
             />
@@ -183,11 +226,8 @@ export default function EditAssetScreen({ route, navigation }: any) {
               mode="outlined"
             />
 
-            {/* Location */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>Location</Text>
-            
             <TextInput
-              label="Location ID (e.g., G08, ILU 204)"
+              label="Location ID"
               value={values.locationId}
               onChangeText={handleChange('locationId')}
               style={styles.input}
@@ -202,31 +242,29 @@ export default function EditAssetScreen({ route, navigation }: any) {
               mode="outlined"
             />
 
-            {/* Maintenance */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>Maintenance</Text>
-            
             <TextInput
-              label="Service Frequency (days)"
-              value={values.serviceFrequency}
-              onChangeText={handleChange('serviceFrequency')}
-              keyboardType="numeric"
+              label="Floor"
+              value={values.floor}
+              onChangeText={handleChange('floor')}
               style={styles.input}
               mode="outlined"
             />
 
-            <View style={styles.switchRow}>
-              <Text>Calibration Required</Text>
-              <Switch
-                value={values.calibrationRequired}
-                onValueChange={(value) => { setFieldValue('calibrationRequired', value); }}
-              />
-            </View>
+            <TextInput
+              label="Date Assigned"
+              value={values.dateAssigned}
+              onChangeText={handleChange('dateAssigned')}
+              placeholder="YYYY-MM-DD"
+              style={styles.input}
+              mode="outlined"
+            />
 
             <TextInput
-              label="Safe Working Load (kg)"
-              value={values.safeWorkingLoad}
-              onChangeText={handleChange('safeWorkingLoad')}
-              keyboardType="numeric"
+              label="Out of Service Reason"
+              value={values.outOfServiceReason}
+              onChangeText={handleChange('outOfServiceReason')}
+              multiline
+              numberOfLines={2}
               style={styles.input}
               mode="outlined"
             />
@@ -261,19 +299,6 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: spacing.sm,
-  },
-  errorText: {
-    color: '#F44336',
-    fontSize: 12,
-    marginBottom: spacing.sm,
-    marginLeft: spacing.sm,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.sm,
   },
   submitButton: {
     marginTop: spacing.xl,

@@ -19,19 +19,22 @@ export default function App() {
 
   useEffect(() => {
     // Initialize Firebase on app start
-    const init = async () => {
+    const init = () => {
       try {
-        await initializeFirebase();
+        console.log('🚀 Initializing app...');
+        initializeFirebase();
         console.log('✅ App initialized successfully');
+        setLoading(false);
       } catch (err: any) {
         console.error('❌ App initialization failed:', err);
         setError(err.message || 'Failed to initialize app');
-      } finally {
         setLoading(false);
       }
     };
 
-    init();
+    // Small delay to ensure Expo is ready
+    const timer = setTimeout(init, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   if (loading) {

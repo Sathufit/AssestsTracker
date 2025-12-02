@@ -16,34 +16,42 @@ export type Condition = 'good' | 'fair' | 'poor';
 export interface Asset {
   id: string; // Firestore document ID
   
-  // Basic Information
-  assetId: string; // Asset Tag Number
-  qrCode: string; // QR code value
-  category: string; // e.g., "Mobility", "Pressure Care", "Hoists", "Weighing Equipment"
-  assetType: string; // e.g., "Air Mattress", "Ceiling Hoist", "Wheelchair"
-  manufacturer?: string;
-  model?: string;
-  serialNumber?: string;
-  ownership: Ownership;
+  // Basic Information - Matching your Excel structure
+  assetNumber?: string; // Asset number from Excel
+  description?: string; // Description from Excel
+  assetRegister?: string; // Asset Register from Excel (e.g., "OPASSET")
+  shortDescription?: string; // Short Description from Excel
+  commissionDate?: string; // Commission Date from Excel
+  manufacturer?: string; // Manufacturer from Excel
+  model?: string; // Model from Excel
+  supplyCondition?: string; // Supply Condition from Excel (e.g., "New", "Used", "Repaired")
   
-  // Location & Status
-  status: AssetStatus;
-  locationType: LocationType;
-  locationId: string; // e.g., "G08", "1.34", "Store B", "ILU 204"
-  dateAssigned?: string; // ISO date string
-  condition: Condition;
-  outOfServiceReason?: string;
+  // Legacy/Optional fields for compatibility
+  qrCode?: string; // QR code value (auto-generated from assetNumber if missing)
+  category?: string; // Category (optional)
+  status?: AssetStatus; // Status (optional)
+  locationType?: LocationType; // Location type (optional)
+  locationId?: string; // Location ID (optional)
+  condition?: Condition; // Condition (optional)
+  ownership?: Ownership; // Ownership (optional)
+  serialNumber?: string; // Serial number (optional)
   
-  // Maintenance fields (Critical for hoists, scales, mobility items)
-  serviceFrequency?: string; // e.g., "6-monthly", "12-monthly"
-  lastServiceDate?: string; // ISO date string
-  nextServiceDue?: string; // ISO date string
-  calibrationRequired: boolean;
+  // Location details
+  dateAssigned?: string; // Date assigned to current location
+  building?: string; // Building name
+  floor?: string; // Floor number
+  outOfServiceReason?: string; // Reason if status is out-of-service
+  
+  // Service fields (all optional)
+  serviceFrequency?: string;
+  lastServiceDate?: string;
+  nextServiceDue?: string;
+  calibrationRequired?: boolean;
   calibrationFrequency?: string;
-  safeWorkingLoad?: number; // For hoists/mobility items in kg
+  safeWorkingLoad?: number;
   
   // Images
-  imageUrls: string[]; // Firebase Storage URLs
+  imageUrls?: string[]; // Firebase Storage URLs
   
   // Metadata
   createdAt: string; // ISO date string
@@ -52,7 +60,7 @@ export interface Asset {
   updatedBy: string; // User ID
   
   // Computed fields
-  serviceStatus?: ServiceStatus; // Computed based on nextServiceDue
+  serviceStatus?: ServiceStatus;
 }
 
 export interface AssetLocation {
@@ -209,31 +217,38 @@ export interface OfflineQueueItem {
 // ============================================
 
 export interface AssetFormValues {
-  assetId: string; // Asset Tag Number
-  qrCode: string;
-  category: string;
-  assetType: string;
-  manufacturer: string;
-  model: string;
-  serialNumber: string;
-  ownership: Ownership;
-  status: AssetStatus;
-  condition: Condition;
-  outOfServiceReason: string;
+  // Core fields matching Excel structure
+  assetNumber?: string; // Asset number
+  description?: string; // Description
+  assetRegister?: string; // Asset Register (e.g., "OPASSET")
+  shortDescription?: string; // Short Description
+  commissionDate?: string; // Commission Date
+  manufacturer?: string; // Manufacturer
+  model?: string; // Model
+  supplyCondition?: string; // Supply Condition (e.g., "New", "Used", "Repaired")
   
-  // Location
-  locationType: LocationType;
-  locationId: string;
-  building: string;
-  floor: string;
-  locationNotes: string;
+  // Optional legacy fields
+  qrCode?: string;
+  category?: string;
+  status?: AssetStatus;
+  condition?: Condition;
+  ownership?: Ownership;
+  serialNumber?: string;
+  locationType?: LocationType;
+  locationId?: string;
   
-  // Maintenance
-  serviceFrequency: string;
-  lastServiceDate: string;
-  calibrationRequired: boolean;
-  calibrationFrequency: string;
-  safeWorkingLoad: string;
+  // Location details
+  dateAssigned?: string;
+  building?: string;
+  floor?: string;
+  outOfServiceReason?: string;
+  
+  // Service fields (all optional)
+  serviceFrequency?: string;
+  lastServiceDate?: string;
+  calibrationRequired?: boolean;
+  calibrationFrequency?: string;
+  safeWorkingLoad?: string;
 }
 
 export interface ServiceRecordFormValues {
@@ -259,6 +274,7 @@ export type AuthStackParamList = {
 
 export type MainStackParamList = {
   Home: undefined;
+  AssetList: { filter?: string } | undefined;
   Scanner: undefined;
   AssetDetails: { assetId: string };
   EditAsset: { assetId?: string };

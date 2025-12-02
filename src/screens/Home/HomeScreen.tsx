@@ -1,18 +1,21 @@
 /**
- * Home Screen
- * Dashboard showing asset statistics and quick actions
+ * Home Screen - Professional Business Dashboard
+ * Clean, sophisticated interface for asset management
  */
 
 import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Card, FAB, Chip, useTheme, ActivityIndicator } from 'react-native-paper';
+import { Text, Card, FAB, useTheme, ActivityIndicator, Icon } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAssets } from '../../hooks';
 import { spacing } from '../../theme';
-import { getStatusColor, getServiceStatusColor } from '../../utils/helpers';
 
 export default function HomeScreen({ navigation }: any) {
   const theme = useTheme();
   const { assets, loading, error } = useAssets();
+  
+  // Type assertion for custom colors
+  const colors = theme.colors as any;
 
   const stats = {
     total: assets.length,
@@ -35,97 +38,157 @@ export default function HomeScreen({ navigation }: any) {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Statistics Cards */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>Asset Overview</Text>
-            
-            <View style={styles.statsGrid}>
-              <View style={styles.statItem}>
-                <Text variant="displaySmall" style={styles.statNumber}>{stats.total}</Text>
-                <Text variant="bodyMedium">Total Assets</Text>
-              </View>
-              
-              <View style={styles.statItem}>
-                <Text variant="displaySmall" style={[styles.statNumber, { color: getStatusColor('in-use') }]}>
-                  {stats.inUse}
-                </Text>
-                <Text variant="bodyMedium">In Use</Text>
-              </View>
-            </View>
+        {/* Hero Section with Gradient */}
+        <LinearGradient
+          colors={[colors.primary, colors.gradient2]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroCard}
+        >
+          <Text variant="headlineLarge" style={styles.heroTitle}>
+            Asset Management System
+          </Text>
+          <Text variant="titleMedium" style={styles.heroSubtitle}>
+            Professional asset tracking and monitoring
+          </Text>
+        </LinearGradient>
 
-            <View style={styles.statsRow}>
-              <Chip icon="check-circle" style={styles.chip} textStyle={{ color: getStatusColor('spare') }}>
-                {stats.spare} Spare
-              </Chip>
-              <Chip icon="alert-circle" style={styles.chip} textStyle={{ color: getStatusColor('out-of-service') }}>
-                {stats.outOfService} Out of Service
-              </Chip>
-            </View>
-          </Card.Content>
-        </Card>
-
-        {/* Service Status */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>Service Status</Text>
-            
-            <View style={styles.serviceStats}>
-              <TouchableOpacity 
-                style={[styles.serviceCard, { backgroundColor: getServiceStatusColor('overdue') + '20' }]}
-                onPress={() => navigation.navigate('AssetList', { filter: 'overdue' })}
+        {/* Statistics Cards - Professional Grid */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statsRow}>
+            <Card style={[styles.statCard, styles.largeStatCard]} elevation={2}>
+              <LinearGradient
+                colors={[colors.primary + '15', colors.primary + '05']}
+                style={styles.statGradient}
               >
-                <Text variant="displaySmall" style={[styles.statNumber, { color: getServiceStatusColor('overdue') }]}>
+                <Icon source="database" size={32} color={colors.primary} />
+                <Text variant="displayMedium" style={[styles.statNumber, { color: colors.primary }]}>
+                  {stats.total}
+                </Text>
+                <Text variant="titleMedium" style={styles.statLabel}>Total Assets</Text>
+              </LinearGradient>
+            </Card>
+            
+            <View style={styles.smallStatsColumn}>
+              <Card style={styles.statCard} elevation={2}>
+                <LinearGradient
+                  colors={[colors.success + '15', colors.success + '05']}
+                  style={styles.statGradient}
+                >
+                  <Icon source="check-circle" size={24} color={colors.success} />
+                  <Text variant="headlineMedium" style={[styles.statNumber, { color: colors.success }]}>
+                    {stats.inUse}
+                  </Text>
+                  <Text variant="bodyLarge" style={styles.statLabel}>In Use</Text>
+                </LinearGradient>
+              </Card>
+              
+              <Card style={styles.statCard} elevation={2}>
+                <LinearGradient
+                  colors={[colors.info + '15', colors.info + '05']}
+                  style={styles.statGradient}
+                >
+                  <Icon source="package-variant" size={24} color={colors.info} />
+                  <Text variant="headlineMedium" style={[styles.statNumber, { color: colors.info }]}>
+                    {stats.spare}
+                  </Text>
+                  <Text variant="bodyLarge" style={styles.statLabel}>Spare</Text>
+                </LinearGradient>
+              </Card>
+            </View>
+          </View>
+          
+          <View style={styles.statsRow}>
+            <Card style={styles.statCard} elevation={2}>
+              <LinearGradient
+                colors={[colors.warning + '15', colors.warning + '05']}
+                style={styles.statGradient}
+              >
+                <Icon source="wrench" size={28} color={colors.warning} />
+                <Text variant="headlineLarge" style={[styles.statNumber, { color: colors.warning }]}>
+                  {stats.outOfService}
+                </Text>
+                <Text variant="titleSmall" style={styles.statLabel}>Out of Service</Text>
+              </LinearGradient>
+            </Card>
+            
+            <Card style={styles.statCard} elevation={2}>
+              <LinearGradient
+                colors={[colors.danger + '15', colors.danger + '05']}
+                style={styles.statGradient}
+              >
+                <Icon source="alert-circle" size={28} color={colors.danger} />
+                <Text variant="headlineLarge" style={[styles.statNumber, { color: colors.danger }]}>
                   {stats.overdue}
                 </Text>
-                <Text variant="bodyMedium">Overdue</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.serviceCard, { backgroundColor: getServiceStatusColor('due-soon') + '20' }]}
-                onPress={() => navigation.navigate('AssetList', { filter: 'due-soon' })}
+                <Text variant="titleSmall" style={styles.statLabel}>Overdue</Text>
+              </LinearGradient>
+            </Card>
+            
+            <Card style={styles.statCard} elevation={2}>
+              <LinearGradient
+                colors={[colors.accent + '15', colors.accent + '05']}
+                style={styles.statGradient}
               >
-                <Text variant="displaySmall" style={[styles.statNumber, { color: getServiceStatusColor('due-soon') }]}>
+                <Icon source="clock-alert" size={28} color={colors.accent} />
+                <Text variant="headlineLarge" style={[styles.statNumber, { color: colors.accent }]}>
                   {stats.dueSoon}
                 </Text>
-                <Text variant="bodyMedium">Due Soon</Text>
-              </TouchableOpacity>
-            </View>
-          </Card.Content>
-        </Card>
+                <Text variant="titleSmall" style={styles.statLabel}>Due Soon</Text>
+              </LinearGradient>
+            </Card>
+          </View>
+        </View>
 
-        {/* Quick Actions */}
-        <Card style={styles.card}>
+        {/* Quick Actions - Professional Grid */}
+        <Card style={styles.actionsCard} elevation={3}>
           <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>Quick Actions</Text>
+            <Text variant="titleLarge" style={styles.sectionTitle}>Quick Actions</Text>
             
-            <View style={styles.actions}>
+            <View style={styles.actionsGrid}>
               <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
-                onPress={() => navigation.navigate('Scanner')}
+                style={[styles.actionButton, { backgroundColor: colors.primary }]}
+                onPress={() => navigation.navigate('AssetList')}
+                activeOpacity={0.7}
               >
-                <Text style={styles.actionButtonText}>Scan QR Code</Text>
+                <Icon source="view-list" size={28} color="#FFFFFF" />
+                <Text style={styles.actionButtonText}>View All</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: theme.colors.secondary }]}
-                onPress={() => navigation.navigate('EditAsset', {})}
+                style={[styles.actionButton, { backgroundColor: colors.secondary }]}
+                onPress={() => navigation.navigate('Scanner')}
+                activeOpacity={0.7}
               >
+                <Icon source="qrcode-scan" size={28} color="#FFFFFF" />
+                <Text style={styles.actionButtonText}>Scan QR</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.actionButton, { backgroundColor: colors.success }]}
+                onPress={() => navigation.navigate('EditAsset', {})}
+                activeOpacity={0.7}
+              >
+                <Icon source="plus-circle" size={28} color="#FFFFFF" />
                 <Text style={styles.actionButtonText}>Add Asset</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: theme.colors.secondary }]}
+                style={[styles.actionButton, { backgroundColor: colors.warning }]}
                 onPress={() => navigation.navigate('Import')}
+                activeOpacity={0.7}
               >
-                <Text style={styles.actionButtonText}>Import Assets</Text>
+                <Icon source="file-import" size={28} color="#FFFFFF" />
+                <Text style={styles.actionButtonText}>Import</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: '#4CAF50' }]}
+                style={[styles.actionButton, { backgroundColor: colors.info }]}
                 onPress={() => navigation.navigate('Dashboard')}
+                activeOpacity={0.7}
               >
-                <Text style={styles.actionButtonText}>View Dashboard</Text>
+                <Icon source="chart-box" size={28} color="#FFFFFF" />
+                <Text style={styles.actionButtonText}>Dashboard</Text>
               </TouchableOpacity>
             </View>
           </Card.Content>
@@ -165,60 +228,110 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
   },
-  card: {
-    marginBottom: spacing.md,
-    borderRadius: 12,
+  
+  // Hero Section
+  heroCard: {
+    padding: spacing.xl * 2,
+    borderRadius: 16,
+    marginBottom: spacing.lg,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
   },
-  cardTitle: {
-    marginBottom: spacing.md,
+  heroTitle: {
+    color: '#FFF',
     fontWeight: 'bold',
+    marginBottom: spacing.sm,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: spacing.md,
+  heroSubtitle: {
+    color: '#FFF',
+    opacity: 0.95,
   },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontWeight: 'bold',
+  
+  // Statistics
+  statsContainer: {
+    marginBottom: spacing.lg,
+    gap: spacing.md,
   },
   statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: spacing.md,
-  },
-  chip: {
-    marginHorizontal: spacing.xs,
-  },
-  serviceStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  serviceCard: {
-    padding: spacing.lg,
-    borderRadius: 12,
-    alignItems: 'center',
-    minWidth: 140,
-  },
-  actions: {
     gap: spacing.md,
   },
+  statCard: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+    minHeight: 120,
+  },
+  statGradient: {
+    flex: 1,
+    padding: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  largeStatCard: {
+    minHeight: 160,
+  },
+  smallStatsColumn: {
+    flex: 1,
+    gap: spacing.md,
+  },
+  statNumber: {
+    fontWeight: 'bold',
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  statLabel: {
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+  
+  // Actions
+  actionsCard: {
+    borderRadius: 12,
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    marginBottom: spacing.lg,
+    fontWeight: '600',
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    justifyContent: 'space-between',
+  },
   actionButton: {
+    width: '48%',
     padding: spacing.lg,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 100,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   actionButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: spacing.sm,
+    textAlign: 'center',
+  },
+  card: {
+    marginBottom: spacing.md,
+    borderRadius: 12,
   },
   fab: {
     position: 'absolute',
     margin: 16,
     right: 0,
     bottom: 0,
+    elevation: 6,
   },
 });

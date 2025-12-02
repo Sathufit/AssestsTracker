@@ -61,35 +61,52 @@ export const createAsset = async (
     const now = getCurrentISOString();
     
     // Calculate next service due if applicable
-    const nextServiceDue = calculateNextServiceDue(
+    const nextServiceDue = formValues.lastServiceDate ? calculateNextServiceDue(
       formValues.lastServiceDate,
-      parseServiceFrequency(formValues.serviceFrequency)
-    );
+      parseServiceFrequency(formValues.serviceFrequency || '')
+    ) : undefined;
     
-    // Build asset object
+    // Build asset object - all fields optional except metadata
     const asset: Asset = {
       id: assetId,
-      assetId: formValues.assetId.trim(),
-      qrCode: formValues.qrCode.trim(),
-      category: formValues.category.trim(),
-      assetType: formValues.assetType.trim(),
+      
+      // Core fields from Excel
+      assetNumber: formValues.assetNumber?.trim() || undefined,
+      description: formValues.description?.trim() || undefined,
+      assetRegister: formValues.assetRegister?.trim() || undefined,
+      shortDescription: formValues.shortDescription?.trim() || undefined,
+      commissionDate: formValues.commissionDate?.trim() || undefined,
       manufacturer: formValues.manufacturer?.trim() || undefined,
       model: formValues.model?.trim() || undefined,
+      supplyCondition: formValues.supplyCondition?.trim() || undefined,
+      
+      // Optional legacy fields
+      qrCode: formValues.qrCode?.trim() || undefined,
+      category: formValues.category?.trim() || undefined,
       serialNumber: formValues.serialNumber?.trim() || undefined,
-      ownership: formValues.ownership,
-      status: formValues.status,
-      locationType: formValues.locationType,
-      locationId: formValues.locationId.trim(),
-      dateAssigned: now,
-      condition: formValues.condition,
+      status: formValues.status || undefined,
+      condition: formValues.condition || undefined,
+      ownership: formValues.ownership || undefined,
+      locationType: formValues.locationType || undefined,
+      locationId: formValues.locationId?.trim() || undefined,
+      
+      // Location details
+      dateAssigned: formValues.dateAssigned?.trim() || undefined,
+      building: formValues.building?.trim() || undefined,
+      floor: formValues.floor?.trim() || undefined,
       outOfServiceReason: formValues.outOfServiceReason?.trim() || undefined,
+      
+      // Service fields (all optional)
       serviceFrequency: formValues.serviceFrequency?.trim() || undefined,
       lastServiceDate: formValues.lastServiceDate || undefined,
       nextServiceDue,
-      calibrationRequired: formValues.calibrationRequired,
+      calibrationRequired: formValues.calibrationRequired || false,
       calibrationFrequency: formValues.calibrationFrequency?.trim() || undefined,
       safeWorkingLoad: formValues.safeWorkingLoad ? parseFloat(formValues.safeWorkingLoad) : undefined,
+      
       imageUrls: [],
+      
+      // Metadata (required)
       createdAt: now,
       updatedAt: now,
       createdBy: userId,
@@ -111,7 +128,7 @@ export const createAsset = async (
       userId,
       userName,
       action: 'created',
-      description: `Asset created: ${asset.assetType} (${asset.assetId})`,
+      description: `Asset created: ${asset.assetNumber || asset.shortDescription || asset.description || 'Unknown'}`,
     });
     
     console.log('✅ Asset created successfully:', assetId);
@@ -138,6 +155,30 @@ export const getAssetById = async (assetId: string): Promise<Asset | null> => {
   } catch (error) {
     console.error('❌ Error getting asset:', error);
     throw new Error('Failed to get asset');
+  }
+};
+
+/**
+ * Check if asset exists by assetNumber
+ */
+export const getAssetByAssetNumber = async (assetNumber: string): Promise<Asset | null> => {
+  try {
+    if (!assetNumber || assetNumber.trim() === '') {
+      return null;
+    }
+    
+    const assetsRef = collection(db, COLLECTIONS.ASSETS);
+    const q = query(assetsRef, where('assetNumber', '==', assetNumber.trim()), limit(1));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return null;
+    }
+    
+    return querySnapshot.docs[0].data() as Asset;
+  } catch (error) {
+    console.error('❌ Error getting asset by asset number:', error);
+    return null;
   }
 };
 
@@ -186,28 +227,37 @@ export const updateAsset = async (
       updatedBy: userId,
     };
     
-    // Update fields if provided
-    if (formValues.assetId) updateData.assetId = formValues.assetId.trim();
-    if (formValues.qrCode) updateData.qrCode = formValues.qrCode.trim();
-    if (formValues.category) updateData.category = formValues.category.trim();
-    if (formValues.assetType) updateData.assetType = formValues.assetType.trim();
+    // Update core fields if provided
+    if (formValues.assetNumber !== undefined) updateData.assetNumber = formValues.assetNumber?.trim();
+    if (formValues.description !== undefined) updateData.description = formValues.description?.trim();
+    if (formValues.assetRegister !== undefined) updateData.assetRegister = formValues.assetRegister?.trim();
+    if (formValues.shortDescription !== undefined) updateData.shortDescription = formValues.shortDescription?.trim();
+    if (formValues.commissionDate !== undefined) updateData.commissionDate = formValues.commissionDate?.trim();
     if (formValues.manufacturer !== undefined) updateData.manufacturer = formValues.manufacturer?.trim();
     if (formValues.model !== undefined) updateData.model = formValues.model?.trim();
+    if (formValues.supplyCondition !== undefined) updateData.supplyCondition = formValues.supplyCondition?.trim();
+    
+    // Update optional/legacy fields if provided
+    if (formValues.qrCode !== undefined) updateData.qrCode = formValues.qrCode?.trim();
+    if (formValues.category !== undefined) updateData.category = formValues.category?.trim();
     if (formValues.serialNumber !== undefined) updateData.serialNumber = formValues.serialNumber?.trim();
-    if (formValues.ownership) updateData.ownership = formValues.ownership;
-    if (formValues.condition) updateData.condition = formValues.condition;
-    if (formValues.status) updateData.status = formValues.status;
+    if (formValues.ownership !== undefined) updateData.ownership = formValues.ownership;
+    if (formValues.condition !== undefined) updateData.condition = formValues.condition;
+    if (formValues.status !== undefined) updateData.status = formValues.status;
+    if (formValues.locationType !== undefined) updateData.locationType = formValues.locationType;
+    if (formValues.locationId !== undefined) updateData.locationId = formValues.locationId?.trim();
+    
+    // Update location details if provided
+    if (formValues.dateAssigned !== undefined) updateData.dateAssigned = formValues.dateAssigned?.trim();
+    if (formValues.building !== undefined) updateData.building = formValues.building?.trim();
+    if (formValues.floor !== undefined) updateData.floor = formValues.floor?.trim();
     if (formValues.outOfServiceReason !== undefined) updateData.outOfServiceReason = formValues.outOfServiceReason?.trim();
+    
+    // Update service fields if provided
     if (formValues.calibrationRequired !== undefined) updateData.calibrationRequired = formValues.calibrationRequired;
     if (formValues.safeWorkingLoad !== undefined) {
       updateData.safeWorkingLoad = formValues.safeWorkingLoad ? parseFloat(formValues.safeWorkingLoad) : undefined;
     }
-    
-    // Update location if provided
-    if (formValues.locationType) updateData.locationType = formValues.locationType;
-    if (formValues.locationId) updateData.locationId = formValues.locationId.trim();
-    
-    // Update maintenance fields
     if (formValues.serviceFrequency !== undefined) {
       updateData.serviceFrequency = formValues.serviceFrequency?.trim();
     }
@@ -218,13 +268,15 @@ export const updateAsset = async (
       updateData.lastServiceDate = formValues.lastServiceDate;
     }
     
-    // Recalculate next service due
+    // Recalculate next service due if service fields changed
     if (formValues.lastServiceDate !== undefined || formValues.serviceFrequency !== undefined) {
       const lastDate = formValues.lastServiceDate || currentAsset.lastServiceDate;
       const frequency = formValues.serviceFrequency || currentAsset.serviceFrequency;
       
-      updateData.nextServiceDue = calculateNextServiceDue(lastDate, parseServiceFrequency(frequency));
-      updateData.serviceStatus = getServiceStatus(updateData.nextServiceDue);
+      if (lastDate && frequency) {
+        updateData.nextServiceDue = calculateNextServiceDue(lastDate, parseServiceFrequency(frequency));
+        updateData.serviceStatus = getServiceStatus(updateData.nextServiceDue);
+      }
     }
     
     // Update in Firestore
@@ -330,7 +382,7 @@ export const getAssetsDueSoon = async (): Promise<Asset[]> => {
 };
 
 /**
- * Search assets by name, QR code, or serial number
+ * Search assets by any field
  */
 export const searchAssets = async (searchTerm: string): Promise<Asset[]> => {
   try {
@@ -338,11 +390,15 @@ export const searchAssets = async (searchTerm: string): Promise<Asset[]> => {
     const lowerSearch = searchTerm.toLowerCase();
     
     return assets.filter(asset => 
-      asset.assetType.toLowerCase().includes(lowerSearch) ||
-      asset.assetId.toLowerCase().includes(lowerSearch) ||
-      asset.qrCode.toLowerCase().includes(lowerSearch) ||
+      asset.assetNumber?.toLowerCase().includes(lowerSearch) ||
+      asset.description?.toLowerCase().includes(lowerSearch) ||
+      asset.shortDescription?.toLowerCase().includes(lowerSearch) ||
+      asset.assetRegister?.toLowerCase().includes(lowerSearch) ||
+      asset.qrCode?.toLowerCase().includes(lowerSearch) ||
       asset.serialNumber?.toLowerCase().includes(lowerSearch) ||
-      asset.category.toLowerCase().includes(lowerSearch)
+      asset.category?.toLowerCase().includes(lowerSearch) ||
+      asset.manufacturer?.toLowerCase().includes(lowerSearch) ||
+      asset.model?.toLowerCase().includes(lowerSearch)
     );
   } catch (error) {
     console.error('❌ Error searching assets:', error);
@@ -435,6 +491,11 @@ export const addHistoryEntry = async (
       description: data.description,
     };
     
+    // Remove undefined fields (Firebase doesn't accept them)
+    const cleanedEntry = Object.fromEntries(
+      Object.entries(historyEntry).filter(([_, v]) => v !== undefined)
+    ) as AssetHistory;
+    
     const historyRef = doc(
       db,
       COLLECTIONS.ASSETS,
@@ -443,7 +504,7 @@ export const addHistoryEntry = async (
       historyId
     );
     
-    await setDoc(historyRef, historyEntry);
+    await setDoc(historyRef, cleanedEntry);
   } catch (error) {
     console.error('❌ Error adding history entry:', error);
     // Don't throw - history is non-critical
@@ -621,6 +682,11 @@ export const uploadAssetImage = async (
   userName: string
 ): Promise<string> => {
   try {
+    // Check if storage is available (requires paid plan)
+    if (!storage) {
+      throw new Error('Firebase Storage is not available. Image upload requires a Firebase paid plan.');
+    }
+    
     // Compress image before upload
     const compressedUri = await compressImage(imageUri, 0.7);
     
@@ -641,7 +707,7 @@ export const uploadAssetImage = async (
     // Update asset's imageUrls array
     const asset = await getAssetById(assetId);
     if (asset) {
-      const updatedImageUrls = [...asset.imageUrls, downloadURL];
+      const updatedImageUrls = [...(asset.imageUrls || []), downloadURL];
       const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
       await updateDoc(assetRef, {
         imageUrls: updatedImageUrls,
@@ -676,13 +742,19 @@ export const deleteAssetImage = async (
   userName: string
 ): Promise<void> => {
   try {
+    // Check if storage is available
+    if (!storage) {
+      console.warn('⚠️ Firebase Storage not available, cannot delete image');
+      return;
+    }
+    
     // Delete from Storage
     const storageRef = ref(storage, imageUrl);
     await deleteObject(storageRef);
     
     // Update asset's imageUrls array
     const asset = await getAssetById(assetId);
-    if (asset) {
+    if (asset && asset.imageUrls) {
       const updatedImageUrls = asset.imageUrls.filter(url => url !== imageUrl);
       const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
       await updateDoc(assetRef, {
@@ -724,21 +796,31 @@ export const assignToRoom = async (
 ): Promise<void> => {
   try {
     const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
-    await updateDoc(assetRef, {
+    const updateData: any = {
       locationType: 'rac-room',
       locationId: roomNumber,
       status: 'in-use',
       dateAssigned: getCurrentISOString(),
       updatedAt: getCurrentISOString(),
       updatedBy: userId,
-    });
+    };
+    
+    if (building) updateData.building = building;
+    if (floor) updateData.floor = floor;
+    
+    await updateDoc(assetRef, updateData);
     
     if (userId && userName) {
+      let description = `Assigned to room ${roomNumber}`;
+      if (building || floor) {
+        description += ` (${building ? `Building ${building}` : ''}${building && floor ? ', ' : ''}${floor ? `Floor ${floor}` : ''})`;
+      }
+      
       await addHistoryEntry(assetId, {
         userId,
         userName,
         action: 'location-changed',
-        description: `Assigned to room ${roomNumber}`,
+        description,
       });
     }
   } catch (error) {

@@ -5,35 +5,41 @@
 
 import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 
-// Custom color palette
+// Custom color palette - Professional, sophisticated, business-grade
 const lightColors = {
-  primary: '#1976D2', // Blue
-  secondary: '#424242', // Dark Gray
-  success: '#4CAF50', // Green
-  warning: '#FF9800', // Orange/Amber
-  danger: '#F44336', // Red
-  info: '#2196F3', // Light Blue
-  background: '#F5F5F5',
+  primary: '#1565C0', // Professional Deep Blue
+  secondary: '#455A64', // Blue Grey - Sophisticated
+  success: '#2E7D32', // Professional Green
+  warning: '#F57C00', // Refined Orange
+  danger: '#C62828', // Professional Red
+  info: '#0288D1', // Info Blue
+  background: '#FAFAFA', // Clean White
   surface: '#FFFFFF',
-  text: '#212121',
-  textSecondary: '#757575',
+  text: '#212121', // Pure Black Text
+  textSecondary: '#757575', // Medium Gray
   border: '#E0E0E0',
   disabled: '#BDBDBD',
+  accent: '#00838F', // Cyan Accent
+  gradient1: '#1565C0', // Deep Blue
+  gradient2: '#0D47A1', // Darker Blue
 };
 
 const darkColors = {
-  primary: '#42A5F5', // Lighter Blue
-  secondary: '#BDBDBD', // Light Gray
-  success: '#66BB6A', // Lighter Green
-  warning: '#FFA726', // Lighter Orange
-  danger: '#EF5350', // Lighter Red
-  info: '#42A5F5', // Lighter Blue
-  background: '#121212',
-  surface: '#1E1E1E',
-  text: '#FFFFFF',
-  textSecondary: '#B0B0B0',
-  border: '#2C2C2C',
-  disabled: '#4F4F4F',
+  primary: '#42A5F5', // Bright Blue
+  secondary: '#78909C', // Light Blue Grey
+  success: '#66BB6A', // Light Green
+  warning: '#FFA726', // Bright Orange
+  danger: '#EF5350', // Bright Red
+  info: '#29B6F6', // Light Blue
+  background: '#121212', // Material Dark
+  surface: '#1E1E1E', // Dark Surface
+  text: '#FFFFFF', // Pure White Text
+  textSecondary: '#B0BEC5', // Light Grey
+  border: '#424242',
+  disabled: '#616161',
+  accent: '#26C6DA', // Cyan Accent
+  gradient1: '#42A5F5', // Bright Blue
+  gradient2: '#1976D2', // Deep Blue
 };
 
 export const lightTheme = {

@@ -49,9 +49,9 @@ export const useAuth = () => {
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     
-    const initAuth = async () => {
+    const initAuth = () => {
       try {
-        const firebaseAuth = await getFirebaseAuth();
+        const firebaseAuth = getFirebaseAuth();
         setAuth(firebaseAuth);
         
         unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {

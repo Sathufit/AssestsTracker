@@ -1,6 +1,6 @@
 /**
- * Dashboard Screen - Live Dashboard Display for Office TV
- * Shows real-time asset status with color coding
+ * Dashboard Screen - Professional Live Dashboard for Office TV
+ * Real-time asset tracking with clean, business-grade interface
  */
 
 import React, { useState, useEffect } from 'react';
@@ -14,8 +14,9 @@ import {
   Text,
   Card,
   useTheme,
-  Chip,
+  Icon,
 } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAssets } from '../../hooks';
 import { Asset } from '../../types';
 
@@ -31,6 +32,7 @@ interface CategoryStats {
 
 export default function DashboardScreen() {
   const theme = useTheme();
+  const colors = theme.colors as any;
   const { assets, loading, error, refresh } = useAssets();
   const [stats, setStats] = useState<Record<string, CategoryStats>>({});
 
@@ -87,58 +89,116 @@ export default function DashboardScreen() {
   };
 
   const renderCategoryCard = (category: string, data: CategoryStats) => {
-    const overdueColor = data.overdue > 0 ? '#F44336' : data.dueForService > 0 ? '#FF9800' : '#4CAF50';
+    // Determine card color based on service status
+    const hasOverdue = data.overdue > 0;
+    const hasDueSoon = data.dueForService > 0;
+    const cardColor = hasOverdue ? colors.danger : hasDueSoon ? colors.warning : colors.success;
+    const cardColorLight = hasOverdue ? colors.danger + '10' : hasDueSoon ? colors.warning + '10' : colors.success + '10';
 
     return (
-      <Card key={category} style={[styles.card, { borderLeftColor: overdueColor, borderLeftWidth: 6 }]}>
-        <Card.Content>
-          <Text variant="titleLarge" style={styles.categoryTitle}>{category}</Text>
-          
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{data.total}</Text>
-              <Text style={styles.statLabel}>Total</Text>
+      <Card key={category} style={styles.categoryCard} elevation={3}>
+        <LinearGradient
+          colors={[cardColorLight, '#FFFFFF']}
+          style={styles.cardGradient}
+        >
+          {/* Category Header with Status Indicator */}
+          <View style={styles.categoryHeader}>
+            <View style={styles.categoryTitleContainer}>
+              <Icon source="folder" size={24} color={cardColor} />
+              <Text variant="headlineMedium" style={[styles.categoryTitle, { color: cardColor }]}>
+                {category}
+              </Text>
             </View>
-            
-            <View style={styles.statItem}>
-              <Text style={[styles.statNumber, { color: '#4CAF50' }]}>{data.inUse}</Text>
-              <Text style={styles.statLabel}>In Use</Text>
+            <View style={[styles.statusIndicator, { backgroundColor: cardColor }]} />
+          </View>
+
+          {/* Main Stats Grid - Larger for TV */}
+          <View style={styles.mainStatsGrid}>
+            {/* Total - Prominent */}
+            <View style={[styles.mainStatBox, { backgroundColor: colors.primary + '15' }]}>
+              <Icon source="database" size={32} color={colors.primary} />
+              <Text variant="displayLarge" style={[styles.mainStatNumber, { color: colors.primary }]}>
+                {data.total}
+              </Text>
+              <Text variant="titleMedium" style={styles.mainStatLabel}>Total Assets</Text>
             </View>
-            
-            <View style={styles.statItem}>
-              <Text style={[styles.statNumber, { color: '#2196F3' }]}>{data.spare}</Text>
-              <Text style={styles.statLabel}>Spare</Text>
+
+            {/* In Use */}
+            <View style={[styles.statBox, { backgroundColor: colors.success + '15' }]}>
+              <Icon source="check-circle" size={24} color={colors.success} />
+              <Text variant="displaySmall" style={[styles.statNumber, { color: colors.success }]}>
+                {data.inUse}
+              </Text>
+              <Text variant="titleSmall" style={styles.statLabel}>In Use</Text>
             </View>
-            
-            <View style={styles.statItem}>
-              <Text style={[styles.statNumber, { color: '#F44336' }]}>{data.outOfService}</Text>
-              <Text style={styles.statLabel}>Out of Service</Text>
+
+            {/* Spare */}
+            <View style={[styles.statBox, { backgroundColor: colors.info + '15' }]}>
+              <Icon source="package-variant" size={24} color={colors.info} />
+              <Text variant="displaySmall" style={[styles.statNumber, { color: colors.info }]}>
+                {data.spare}
+              </Text>
+              <Text variant="titleSmall" style={styles.statLabel}>Spare</Text>
             </View>
           </View>
 
-          {(data.dueForService > 0 || data.overdue > 0) && (
-            <View style={styles.alertRow}>
-              {data.overdue > 0 && (
-                <Chip icon="alert" style={[styles.chip, { backgroundColor: '#FFCDD2' }]}>
-                  {data.overdue} Overdue Service
-                </Chip>
-              )}
-              {data.dueForService > 0 && (
-                <Chip icon="clock-alert" style={[styles.chip, { backgroundColor: '#FFE0B2' }]}>
-                  {data.dueForService} Due Soon
-                </Chip>
-              )}
-            </View>
-          )}
+          {/* Service Status Row */}
+          <View style={styles.serviceStatusRow}>
+            {/* Overdue - Red Alert */}
+            {data.overdue > 0 && (
+              <View style={[styles.alertBox, { backgroundColor: colors.danger }]}>
+                <LinearGradient
+                  colors={[colors.danger, colors.danger + 'CC']}
+                  style={styles.alertGradient}
+                >
+                  <Icon source="alert-circle" size={32} color="#FFFFFF" />
+                  <Text variant="displayMedium" style={styles.alertNumber}>
+                    {data.overdue}
+                  </Text>
+                  <Text variant="titleMedium" style={styles.alertLabel}>OVERDUE SERVICE</Text>
+                </LinearGradient>
+              </View>
+            )}
 
-          {data.missing > 0 && (
-            <View style={styles.alertRow}>
-              <Chip icon="alert-circle" style={[styles.chip, { backgroundColor: '#F8BBD0' }]}>
-                {data.missing} Missing
-              </Chip>
-            </View>
-          )}
-        </Card.Content>
+            {/* Due Soon - Orange Warning */}
+            {data.dueForService > 0 && (
+              <View style={[styles.alertBox, { backgroundColor: colors.warning }]}>
+                <LinearGradient
+                  colors={[colors.warning, colors.warning + 'CC']}
+                  style={styles.alertGradient}
+                >
+                  <Icon source="clock-alert" size={32} color="#FFFFFF" />
+                  <Text variant="displayMedium" style={styles.alertNumber}>
+                    {data.dueForService}
+                  </Text>
+                  <Text variant="titleMedium" style={styles.alertLabel}>DUE SOON</Text>
+                </LinearGradient>
+              </View>
+            )}
+          </View>
+
+          {/* Additional Status */}
+          <View style={styles.additionalStats}>
+            {data.outOfService > 0 && (
+              <View style={[styles.miniStatBox, { backgroundColor: colors.warning + '20' }]}>
+                <Icon source="wrench" size={20} color={colors.warning} />
+                <Text variant="headlineSmall" style={{ color: colors.warning, fontWeight: 'bold' }}>
+                  {data.outOfService}
+                </Text>
+                <Text variant="labelLarge" style={{ color: colors.warning }}>Out of Service</Text>
+              </View>
+            )}
+            {data.missing > 0 && (
+              <View style={[styles.miniStatBox, { backgroundColor: colors.danger + '20' }]}>
+                <Icon source="help-circle" size={20} color={colors.danger} />
+                <Text variant="headlineSmall" style={{ color: colors.danger, fontWeight: 'bold' }}>
+                  {data.missing}
+                </Text>
+                <Text variant="labelLarge" style={{ color: colors.danger }}>Missing</Text>
+              </View>
+            )}
+          </View>
+        </LinearGradient>
       </Card>
     );
   };
@@ -150,38 +210,58 @@ export default function DashboardScreen() {
         <RefreshControl refreshing={loading} onRefresh={refresh} />
       }
     >
-      <View style={styles.header}>
-        <Text variant="displaySmall" style={styles.headerTitle}>Asset Dashboard</Text>
-        <Text variant="bodyLarge" style={styles.headerSubtitle}>Live Status Overview</Text>
-      </View>
+      {/* Modern Gradient Header */}
+      <LinearGradient
+        colors={[theme.colors.primary, theme.colors.secondary]}
+        style={styles.header}
+      >
+        <Text variant="displayMedium" style={styles.headerTitle}>Asset Dashboard</Text>
+        <Text variant="titleLarge" style={styles.headerSubtitle}>Live Status • {assets.length} Total Assets</Text>
+        <Text variant="bodyMedium" style={styles.lastUpdate}>
+          Auto-refreshing • Pull to refresh
+        </Text>
+      </LinearGradient>
 
       {error && (
-        <Card style={[styles.card, { backgroundColor: '#FFEBEE' }]}>
+        <Card style={styles.errorCard} elevation={3}>
           <Card.Content>
-            <Text style={{ color: '#D32F2F' }}>{error}</Text>
+            <Text variant="titleMedium" style={{ color: '#D32F2F', fontWeight: 'bold' }}>Error</Text>
+            <Text style={{ color: '#F44336', marginTop: 8 }}>{error}</Text>
           </Card.Content>
         </Card>
       )}
 
       <View style={styles.content}>
-        {Object.entries(stats).map(([category, data]) => renderCategoryCard(category, data))}
+        {Object.entries(stats)
+          .sort(([, a], [, b]) => {
+            // Sort by overdue first, then due soon, then by total count
+            if (a.overdue !== b.overdue) return b.overdue - a.overdue;
+            if (a.dueForService !== b.dueForService) return b.dueForService - a.dueForService;
+            return b.total - a.total;
+          })
+          .map(([category, data]) => renderCategoryCard(category, data))}
       </View>
 
-      <View style={styles.legend}>
-        <Text variant="titleMedium" style={styles.legendTitle}>Status Legend</Text>
-        <View style={styles.legendRow}>
-          <View style={[styles.legendItem, { backgroundColor: '#4CAF50' }]} />
-          <Text style={styles.legendText}>All Good</Text>
-        </View>
-        <View style={styles.legendRow}>
-          <View style={[styles.legendItem, { backgroundColor: '#FF9800' }]} />
-          <Text style={styles.legendText}>Service Due Soon</Text>
-        </View>
-        <View style={styles.legendRow}>
-          <View style={[styles.legendItem, { backgroundColor: '#F44336' }]} />
-          <Text style={styles.legendText}>Overdue or Out of Service</Text>
-        </View>
-      </View>
+      {/* Status Legend */}
+      <Card style={styles.legendCard} elevation={2}>
+        <Card.Content>
+          <Text variant="titleLarge" style={styles.legendTitle}>Status Legend</Text>
+          <View style={styles.legendGrid}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#26C281' }]} />
+              <Text variant="bodyLarge">All Good - No Issues</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#F39C12' }]} />
+              <Text variant="bodyLarge">Service Due Soon</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#F44336' }]} />
+              <Text variant="bodyLarge">Overdue Service</Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
     </ScrollView>
   );
 }
@@ -189,83 +269,162 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F0F4F8',
   },
   header: {
-    backgroundColor: '#1976D2',
-    padding: 24,
-    paddingTop: 40,
+    padding: 32,
+    paddingTop: 48,
+    paddingBottom: 32,
   },
   headerTitle: {
-    color: '#FFF',
+    color: '#FFFFFF',
     fontWeight: 'bold',
+    marginBottom: 8,
   },
   headerSubtitle: {
-    color: '#E3F2FD',
-    marginTop: 4,
+    color: '#FFFFFF',
+    opacity: 0.95,
+    marginBottom: 4,
+  },
+  lastUpdate: {
+    color: '#FFFFFF',
+    opacity: 0.8,
   },
   content: {
     padding: 16,
   },
-  card: {
-    marginBottom: 16,
-    elevation: 3,
+  errorCard: {
+    margin: 16,
+    backgroundColor: '#FFEBEE',
+  },
+  
+  // Category Card Styles
+  categoryCard: {
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  cardGradient: {
+    padding: 24,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  categoryTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   categoryTitle: {
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#1976D2',
   },
-  statsRow: {
+  statusIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    elevation: 2,
+  },
+
+  // Main Stats Grid
+  mainStatsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 12,
     marginBottom: 16,
   },
-  statItem: {
+  mainStatBox: {
+    flex: 2,
+    padding: 20,
+    borderRadius: 16,
     alignItems: 'center',
+    elevation: 2,
+  },
+  mainStatNumber: {
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  mainStatLabel: {
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  statBox: {
     flex: 1,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    elevation: 2,
   },
   statNumber: {
-    fontSize: 32,
     fontWeight: 'bold',
-    color: '#212121',
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#757575',
-    marginTop: 4,
+    fontWeight: '600',
+    textAlign: 'center',
   },
-  alertRow: {
+
+  // Service Status Alerts
+  serviceStatusRow: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  alertBox: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 4,
+  },
+  alertGradient: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  alertNumber: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  alertLabel: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
+  // Additional Stats
+  additionalStats: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 8,
+    gap: 12,
   },
-  chip: {
-    marginRight: 8,
-  },
-  legend: {
+  miniStatBox: {
+    flex: 1,
     padding: 16,
-    backgroundColor: '#FFF',
-    marginTop: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    elevation: 1,
+  },
+
+  // Legend
+  legendCard: {
+    margin: 16,
+    marginTop: 0,
+    borderRadius: 16,
   },
   legendTitle: {
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+  legendGrid: {
+    gap: 12,
   },
   legendItem: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    marginRight: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  legendText: {
-    fontSize: 14,
-    color: '#424242',
+  legendDot: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 16,
+    elevation: 2,
   },
 });

@@ -91,23 +91,27 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
         <Card style={styles.card}>
           <Card.Content>
             <View style={styles.header}>
-              <Text variant="headlineMedium" style={styles.assetName}>{asset.assetType}</Text>
-              <Chip 
-                style={[styles.statusChip, { backgroundColor: getStatusColor(asset.status) }]}
-                textStyle={{ color: '#fff' }}
-              >
-                {asset.status}
-              </Chip>
+              <Text variant="headlineMedium" style={styles.assetName}>
+                {asset.shortDescription || asset.description || asset.assetNumber || 'Asset'}
+              </Text>
+              {asset.status && (
+                <Chip 
+                  style={[styles.statusChip, { backgroundColor: getStatusColor(asset.status) }]}
+                  textStyle={{ color: '#fff' }}
+                >
+                  {asset.status}
+                </Chip>
+              )}
             </View>
             
-            <Text variant="titleMedium" style={styles.category}>{asset.category}</Text>
-            <Text variant="bodyMedium" style={styles.qrCode}>QR: {asset.qrCode}</Text>
-            <Text variant="bodyMedium" style={styles.qrCode}>Asset ID: {asset.assetId}</Text>
+            {asset.assetRegister && <Text variant="titleMedium" style={styles.category}>{asset.assetRegister}</Text>}
+            {asset.assetNumber && <Text variant="bodyMedium" style={styles.qrCode}>Asset Number: {asset.assetNumber}</Text>}
+            {asset.qrCode && <Text variant="bodyMedium" style={styles.qrCode}>QR: {asset.qrCode}</Text>}
           </Card.Content>
         </Card>
 
         {/* Images */}
-        {asset.imageUrls.length > 0 && (
+        {asset.imageUrls && asset.imageUrls.length > 0 && (
           <Card style={styles.card}>
             <Card.Content>
               <Text variant="titleMedium" style={styles.sectionTitle}>Images</Text>
@@ -125,56 +129,120 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
           <Card.Content>
             <Text variant="titleMedium" style={styles.sectionTitle}>Details</Text>
             
-            <View style={styles.detailRow}>
-              <Text style={styles.label}>Manufacturer:</Text>
-              <Text style={styles.value}>{asset.manufacturer || 'N/A'}</Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <Text style={styles.label}>Model:</Text>
-              <Text style={styles.value}>{asset.model || 'N/A'}</Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <Text style={styles.label}>Serial Number:</Text>
-              <Text style={styles.value}>{asset.serialNumber || 'N/A'}</Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <Text style={styles.label}>Ownership:</Text>
-              <Text style={styles.value}>{asset.ownership}</Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <Text style={styles.label}>Condition:</Text>
-              <Text style={styles.value}>{asset.condition}</Text>
-            </View>
-          </Card.Content>
-        </Card>
-
-        {/* Location */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.sectionTitle}>Location</Text>
-            
-            <View style={styles.detailRow}>
-              <Text style={styles.label}>Type:</Text>
-              <Text style={styles.value}>{asset.locationType}</Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <Text style={styles.label}>Location ID:</Text>
-              <Text style={styles.value}>{asset.locationId || 'N/A'}</Text>
-            </View>
-            
-            {asset.dateAssigned && (
+            {asset.description && (
               <View style={styles.detailRow}>
-                <Text style={styles.label}>Date Assigned:</Text>
-                <Text style={styles.value}>{formatDisplayDate(asset.dateAssigned)}</Text>
+                <Text style={styles.label}>Description:</Text>
+                <Text style={styles.value}>{asset.description}</Text>
+              </View>
+            )}
+            
+            {asset.manufacturer && (
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Manufacturer:</Text>
+                <Text style={styles.value}>{asset.manufacturer}</Text>
+              </View>
+            )}
+            
+            {asset.model && (
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Model:</Text>
+                <Text style={styles.value}>{asset.model}</Text>
+              </View>
+            )}
+            
+            {asset.serialNumber && (
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Serial Number:</Text>
+                <Text style={styles.value}>{asset.serialNumber}</Text>
+              </View>
+            )}
+            
+            {asset.supplyCondition && (
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Supply Condition:</Text>
+                <Text style={styles.value}>{asset.supplyCondition}</Text>
+              </View>
+            )}
+            
+            {asset.commissionDate && (
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Commission Date:</Text>
+                <Text style={styles.value}>{asset.commissionDate}</Text>
+              </View>
+            )}
+            
+            {asset.ownership && (
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Ownership:</Text>
+                <Text style={styles.value}>{asset.ownership}</Text>
+              </View>
+            )}
+            
+            {asset.condition && (
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Condition:</Text>
+                <Text style={styles.value}>{asset.condition}</Text>
               </View>
             )}
           </Card.Content>
         </Card>
+
+        {/* Location */}
+        {(asset.locationType || asset.locationId || asset.building || asset.floor) && (
+          <Card style={styles.card}>
+            <Card.Content>
+              <Text variant="titleMedium" style={styles.sectionTitle}>Location</Text>
+              
+              {asset.locationType && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.label}>Type:</Text>
+                  <Text style={styles.value}>{asset.locationType}</Text>
+                </View>
+              )}
+              
+              {asset.locationId && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.label}>Room Number:</Text>
+                  <Text style={styles.value}>{asset.locationId}</Text>
+                </View>
+              )}
+              
+              {asset.building && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.label}>Building:</Text>
+                  <Text style={styles.value}>{asset.building}</Text>
+                </View>
+              )}
+              
+              {asset.floor && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.label}>Floor:</Text>
+                  <Text style={styles.value}>{asset.floor}</Text>
+                </View>
+              )}
+              
+              {asset.dateAssigned && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.label}>Date Assigned:</Text>
+                  <Text style={styles.value}>{formatDisplayDate(asset.dateAssigned)}</Text>
+                </View>
+              )}
+            </Card.Content>
+          </Card>
+        )}
+        
+        {/* Out of Service */}
+        {asset.status === 'out-of-service' && asset.outOfServiceReason && (
+          <Card style={[styles.card, { borderLeftWidth: 4, borderLeftColor: theme.colors.error }]}>
+            <Card.Content>
+              <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.error }]}>Out of Service</Text>
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Reason:</Text>
+                <Text style={styles.value}>{asset.outOfServiceReason}</Text>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
 
         {/* Maintenance */}
         <Card style={styles.card}>

@@ -41,8 +41,9 @@ import {
   parseServiceFrequency,
 } from '../utils/helpers';
 
-const db = getFirebaseDB();
-const storage = getFirebaseStorage();
+// Lazy getters for Firebase services - don't initialize at module load time
+const getDB = () => getFirebaseDB();
+const getStorageRef = () => getFirebaseStorage();
 
 // ============================================
 // Asset CRUD Operations
@@ -120,7 +121,7 @@ export const createAsset = async (
     ) as Asset;
     
     // Save to Firestore
-    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
     await setDoc(assetRef, cleanedAsset);
     
     // Add history entry
@@ -144,7 +145,7 @@ export const createAsset = async (
  */
 export const getAssetById = async (assetId: string): Promise<Asset | null> => {
   try {
-    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
     const assetDoc = await getDoc(assetRef);
     
     if (!assetDoc.exists()) {
@@ -167,7 +168,7 @@ export const getAssetByAssetNumber = async (assetNumber: string): Promise<Asset 
       return null;
     }
     
-    const assetsRef = collection(db, COLLECTIONS.ASSETS);
+    const assetsRef = collection(getDB(), COLLECTIONS.ASSETS);
     const q = query(assetsRef, where('assetNumber', '==', assetNumber.trim()), limit(1));
     const querySnapshot = await getDocs(q);
     
@@ -187,7 +188,7 @@ export const getAssetByAssetNumber = async (assetNumber: string): Promise<Asset 
  */
 export const getAssetByQRCode = async (qrCode: string): Promise<Asset | null> => {
   try {
-    const assetsRef = collection(db, COLLECTIONS.ASSETS);
+    const assetsRef = collection(getDB(), COLLECTIONS.ASSETS);
     const q = query(assetsRef, where('qrCode', '==', qrCode), limit(1));
     const querySnapshot = await getDocs(q);
     
@@ -212,7 +213,7 @@ export const updateAsset = async (
   userName: string
 ): Promise<void> => {
   try {
-    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
     const now = getCurrentISOString();
     
     // Get current asset for comparison
@@ -301,7 +302,7 @@ export const deleteAsset = async (
   userName: string
 ): Promise<void> => {
   try {
-    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
     
     await updateDoc(assetRef, {
       status: 'retired',
@@ -339,7 +340,7 @@ export const getAssets = async (filters?: {
   limit?: number;
 }): Promise<Asset[]> => {
   try {
-    const assetsRef = collection(db, COLLECTIONS.ASSETS);
+    const assetsRef = collection(getDB(), COLLECTIONS.ASSETS);
     const constraints: QueryConstraint[] = [];
     
     if (filters?.status) {
@@ -413,7 +414,7 @@ export const subscribeToAssets = (
   callback: (assets: Asset[]) => void,
   filters?: { status?: string; category?: string }
 ): Unsubscribe => {
-  const assetsRef = collection(db, COLLECTIONS.ASSETS);
+  const assetsRef = collection(getDB(), COLLECTIONS.ASSETS);
   const constraints: QueryConstraint[] = [];
   
   if (filters?.status) {
@@ -442,7 +443,7 @@ export const subscribeToAsset = (
   assetId: string,
   callback: (asset: Asset | null) => void
 ): Unsubscribe => {
-  const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+  const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
   
   return onSnapshot(assetRef, (docSnapshot) => {
     if (docSnapshot.exists()) {
@@ -497,7 +498,7 @@ export const addHistoryEntry = async (
     ) as AssetHistory;
     
     const historyRef = doc(
-      db,
+      getDB(),
       COLLECTIONS.ASSETS,
       assetId,
       SUBCOLLECTIONS.HISTORY,
@@ -516,7 +517,7 @@ export const addHistoryEntry = async (
  */
 export const getAssetHistory = async (assetId: string): Promise<AssetHistory[]> => {
   try {
-    const historyRef = collection(db, COLLECTIONS.ASSETS, assetId, SUBCOLLECTIONS.HISTORY);
+    const historyRef = collection(getDB(), COLLECTIONS.ASSETS, assetId, SUBCOLLECTIONS.HISTORY);
     const q = query(historyRef, orderBy('timestamp', 'desc'));
     const querySnapshot = await getDocs(q);
     
@@ -618,11 +619,11 @@ export const addServiceRecord = async (
     }
     
     // Save service record
-    const serviceRef = doc(db, COLLECTIONS.SERVICE_RECORDS, serviceId);
+    const serviceRef = doc(getDB(), COLLECTIONS.SERVICE_RECORDS, serviceId);
     await setDoc(serviceRef, serviceRecord);
     
     // Update asset's last service date and next due date
-    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
     const updateData: Partial<Asset> = {
       lastServiceDate: formValues.serviceDate,
       updatedAt: now,
@@ -657,7 +658,7 @@ export const addServiceRecord = async (
  */
 export const getServiceRecords = async (assetId: string): Promise<ServiceRecord[]> => {
   try {
-    const recordsRef = collection(db, COLLECTIONS.SERVICE_RECORDS);
+    const recordsRef = collection(getDB(), COLLECTIONS.SERVICE_RECORDS);
     const q = query(
       recordsRef,
       where('assetId', '==', assetId),
@@ -687,7 +688,7 @@ export const uploadAssetImage = async (
 ): Promise<string> => {
   try {
     // Check if storage is available (requires paid plan)
-    if (!storage) {
+    if (!getStorageRef()) {
       throw new Error('Firebase Storage is not available. Image upload requires a Firebase paid plan.');
     }
     
@@ -700,6 +701,8 @@ export const uploadAssetImage = async (
     
     // Generate unique filename
     const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+    const storage = getStorageRef();
+    if (!storage) throw new Error('Storage not available');
     const storageRef = ref(storage, `assets/${assetId}/${filename}`);
     
     // Upload
@@ -712,7 +715,7 @@ export const uploadAssetImage = async (
     const asset = await getAssetById(assetId);
     if (asset) {
       const updatedImageUrls = [...(asset.imageUrls || []), downloadURL];
-      const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+      const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
       await updateDoc(assetRef, {
         imageUrls: updatedImageUrls,
         updatedAt: getCurrentISOString(),
@@ -747,12 +750,14 @@ export const deleteAssetImage = async (
 ): Promise<void> => {
   try {
     // Check if storage is available
-    if (!storage) {
+    if (!getStorageRef()) {
       console.warn('⚠️ Firebase Storage not available, cannot delete image');
       return;
     }
     
-    // Delete from Storage
+    // Delete from storage
+    const storage = getStorageRef();
+    if (!storage) throw new Error('Storage not available');
     const storageRef = ref(storage, imageUrl);
     await deleteObject(storageRef);
     
@@ -760,7 +765,7 @@ export const deleteAssetImage = async (
     const asset = await getAssetById(assetId);
     if (asset && asset.imageUrls) {
       const updatedImageUrls = asset.imageUrls.filter(url => url !== imageUrl);
-      const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+      const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
       await updateDoc(assetRef, {
         imageUrls: updatedImageUrls,
         updatedAt: getCurrentISOString(),
@@ -799,7 +804,7 @@ export const assignToRoom = async (
   userName?: string
 ): Promise<void> => {
   try {
-    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
     const updateData: any = {
       locationType: 'rac-room',
       locationId: roomNumber,
@@ -842,7 +847,7 @@ export const markAsSpare = async (
   userName: string
 ): Promise<void> => {
   try {
-    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
     await updateDoc(assetRef, {
       locationType: 'storage',
       locationId: 'Spare Storage',
@@ -873,7 +878,7 @@ export const markOutOfService = async (
   userName: string
 ): Promise<void> => {
   try {
-    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
     await updateDoc(assetRef, {
       status: 'out-of-service',
       outOfServiceReason: reason,
@@ -902,7 +907,7 @@ export const returnToInUse = async (
   userName: string
 ): Promise<void> => {
   try {
-    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
     const updateData: any = {
       status: 'in-use',
       updatedAt: getCurrentISOString(),

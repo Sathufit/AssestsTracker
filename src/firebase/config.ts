@@ -1,34 +1,19 @@
 import { initializeApp, FirebaseApp, getApps } from 'firebase/app';
 import { 
-  getAuth, 
-  Auth,
-  initializeAuth
+  initializeAuth,
+  getAuth,
+  Auth
 } from 'firebase/auth';
 import { 
   getFirestore, 
   Firestore,
   initializeFirestore,
-  CACHE_SIZE_UNLIMITED,
-  persistentLocalCache,
-  persistentMultipleTabManager
+  CACHE_SIZE_UNLIMITED
 } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-
-// Firebase 9 React Native Persistence
-const ReactNativeAsyncStorage = {
-  async getItem(key: string): Promise<string | null> {
-    return AsyncStorage.getItem(key);
-  },
-  async setItem(key: string, value: string): Promise<void> {
-    return AsyncStorage.setItem(key, value);
-  },
-  async removeItem(key: string): Promise<void> {
-    return AsyncStorage.removeItem(key);
-  }
-};
 
 // Firebase configuration from app.json extra fields (works with Expo Go)
 const firebaseConfig = {
@@ -100,17 +85,9 @@ const initializeFirebaseAuth = (firebaseApp: FirebaseApp): Auth => {
       return auth;
     }
     
-    // Use initializeAuth with AsyncStorage persistence for React Native
-    if (Platform.OS !== 'web') {
-      auth = initializeAuth(firebaseApp, {
-        persistence: ReactNativeAsyncStorage as any
-      });
-      console.log(`✅ Firebase Auth initialized with AsyncStorage persistence (${Platform.OS})`);
-    } else {
-      // For web, use getAuth which handles browser persistence automatically
-      auth = getAuth(firebaseApp);
-      console.log('✅ Firebase Auth initialized for web');
-    }
+    // Just use getAuth - Firebase 12 handles persistence automatically
+    auth = getAuth(firebaseApp);
+    console.log(`✅ Firebase Auth initialized (${Platform.OS})`);
     
     if (!auth) {
       throw new Error('Failed to initialize Firebase Auth');
@@ -135,17 +112,8 @@ const initializeFirestoreDB = (firebaseApp: FirebaseApp): Firestore => {
     // Initialize with custom settings for better offline support
     const firestoreSettings: any = {
       experimentalForceLongPolling: Platform.OS === 'android',
+      cacheSizeBytes: CACHE_SIZE_UNLIMITED
     };
-
-    // Add persistent cache for web (new API) - don't use cacheSizeBytes with localCache
-    if (Platform.OS === 'web') {
-      firestoreSettings.localCache = persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-      });
-    } else {
-      // For native, use cacheSizeBytes
-      firestoreSettings.cacheSizeBytes = CACHE_SIZE_UNLIMITED;
-    }
 
     try {
       db = initializeFirestore(firebaseApp, firestoreSettings);

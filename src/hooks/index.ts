@@ -12,9 +12,10 @@ import {
   User as FirebaseUser,
   updateProfile,
   Auth,
+  getAuth,
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getFirebaseAuth } from '../firebase/config';
+import { getFirebaseApp } from '../firebase/config';
 import { Asset, User, OfflineQueueItem } from '../types';
 import {
   getAssets,
@@ -51,7 +52,8 @@ export const useAuth = () => {
     
     const initAuth = () => {
       try {
-        const firebaseAuth = getFirebaseAuth();
+        const firebaseApp = getFirebaseApp();
+        const firebaseAuth = getAuth(firebaseApp);
         setAuth(firebaseAuth);
         
         unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {

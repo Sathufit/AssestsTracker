@@ -19,10 +19,13 @@ export default function App() {
 
   useEffect(() => {
     // Initialize Firebase on app start
-    const init = () => {
+    const init = async () => {
       try {
         console.log('🚀 Initializing app...');
+        console.log('Platform:', require('react-native').Platform.OS);
+        
         initializeFirebase();
+        
         console.log('✅ App initialized successfully');
         setLoading(false);
       } catch (err: any) {
@@ -32,9 +35,8 @@ export default function App() {
       }
     };
 
-    // Small delay to ensure Expo is ready
-    const timer = setTimeout(init, 100);
-    return () => clearTimeout(timer);
+    // Initialize immediately
+    init();
   }, []);
 
   if (loading) {
@@ -48,8 +50,11 @@ export default function App() {
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to initialize app</Text>
+        <Text style={styles.errorText}>❌ Failed to Initialize</Text>
         <Text style={styles.errorDetails}>{error}</Text>
+        <Text style={styles.errorHint}>
+          Please check your internet connection and Firebase configuration.
+        </Text>
       </View>
     );
   }
@@ -72,17 +77,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
+    padding: 20,
   },
   errorText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#F44336',
     marginBottom: 8,
+    textAlign: 'center',
   },
   errorDetails: {
     fontSize: 14,
     color: '#757575',
     textAlign: 'center',
     paddingHorizontal: 32,
+    marginBottom: 16,
+  },
+  errorHint: {
+    fontSize: 12,
+    color: '#9E9E9E',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+    fontStyle: 'italic',
   },
 });

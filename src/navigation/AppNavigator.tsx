@@ -19,6 +19,7 @@ import ScannerScreen from '../screens/Scanner/ScannerScreen';
 import AssetDetailsScreen from '../screens/Assets/AssetDetailsScreen';
 import AssetListScreen from '../screens/Assets/AssetListScreen';
 import EditAssetScreen from '../screens/Assets/EditAssetScreen';
+import AddServiceRecordScreen from '../screens/Assets/AddServiceRecordScreen';
 import ImportScreen from '../screens/Import/ImportScreen';
 import DashboardScreen from '../screens/Dashboard/DashboardScreen';
 
@@ -93,6 +94,11 @@ function MainNavigator() {
         options={({ route }) => ({
           title: route.params?.assetId ? 'Edit Asset' : 'Add Asset',
         })}
+      />
+      <MainStack.Screen 
+        name="AddServiceRecord" 
+        component={AddServiceRecordScreen}
+        options={{ title: 'Add Service Record' }}
       />
       <MainStack.Screen 
         name="Import" 

@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Image } from 'react-native';
-import { Text, Card, Button, Chip, FAB, useTheme, ActivityIndicator } from 'react-native-paper';
-import { getAssetById, markAsSpare, markOutOfService, assignToRoom } from '../../api/assets';
+import { Text, Card, Button, Chip, FAB, useTheme, ActivityIndicator, Dialog, Portal, TextInput } from 'react-native-paper';
+import { getAssetById, markAsSpare, markOutOfService, assignToRoom, returnToInUse } from '../../api/assets';
 import { Asset } from '../../types';
 import { spacing } from '../../theme';
 import { formatDisplayDate, getStatusColor, getServiceStatusColor, formatCurrency } from '../../utils/helpers';
@@ -18,6 +18,8 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
   const { assetId } = route.params;
   const [asset, setAsset] = useState<Asset | null>(null);
   const [loading, setLoading] = useState(true);
+  const [outOfServiceDialogVisible, setOutOfServiceDialogVisible] = useState(false);
+  const [outOfServiceReason, setOutOfServiceReason] = useState('');
 
   useEffect(() => {
     loadAsset();
@@ -38,32 +40,69 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
   const handleMarkSpare = async () => {
     if (!asset || !user) return;
     
-    try {
-      await markAsSpare(asset.id, user.uid, user.displayName || user.email || 'Unknown');
-      Alert.alert('Success', 'Asset marked as spare');
-      loadAsset();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to mark as spare');
-    }
+    Alert.alert(
+      'Mark as Spare',
+      'Are you sure you want to mark this asset as spare?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Confirm',
+          onPress: async () => {
+            try {
+              await markAsSpare(asset.id, user.uid, user.displayName || user.email || 'Unknown');
+              Alert.alert('Success', 'Asset marked as spare');
+              loadAsset();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to mark as spare');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleMarkOutOfService = () => {
+    setOutOfServiceDialogVisible(true);
+  };
+
+  const confirmMarkOutOfService = async () => {
+    if (!asset || !user || !outOfServiceReason.trim()) {
+      Alert.alert('Error', 'Please enter a reason');
+      return;
+    }
+    
+    try {
+      await markOutOfService(asset.id, outOfServiceReason.trim(), user.uid, user.displayName || user.email || 'Unknown');
+      setOutOfServiceDialogVisible(false);
+      setOutOfServiceReason('');
+      Alert.alert('Success', 'Asset marked out of service');
+      loadAsset();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to mark out of service');
+    }
+  };
+
+  const handleReturnToInUse = async () => {
     if (!asset || !user) return;
     
-    Alert.prompt(
-      'Mark Out of Service',
-      'Enter reason:',
-      async (reason) => {
-        if (reason) {
-          try {
-            await markOutOfService(asset.id, reason, user.uid, user.displayName || user.email || 'Unknown');
-            Alert.alert('Success', 'Asset marked out of service');
-            loadAsset();
-          } catch (error) {
-            Alert.alert('Error', 'Failed to mark out of service');
+    Alert.alert(
+      'Return to In-Use',
+      'Are you sure you want to return this asset to in-use status?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Confirm',
+          onPress: async () => {
+            try {
+              await returnToInUse(asset.id, user.uid, user.displayName || user.email || 'Unknown');
+              Alert.alert('Success', 'Asset returned to in-use status');
+              loadAsset();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to return to in-use');
+            }
           }
         }
-      }
+      ]
     );
   };
 
@@ -260,12 +299,12 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
             
             <View style={styles.detailRow}>
               <Text style={styles.label}>Last Service:</Text>
-              <Text style={styles.value}>{formatDisplayDate(asset.lastServiceDate)}</Text>
+              <Text style={styles.value}>{asset.lastServiceDate ? formatDisplayDate(asset.lastServiceDate) : 'N/A'}</Text>
             </View>
             
             <View style={styles.detailRow}>
               <Text style={styles.label}>Next Due:</Text>
-              <Text style={styles.value}>{formatDisplayDate(asset.nextServiceDue)}</Text>
+              <Text style={styles.value}>{asset.nextServiceDue ? formatDisplayDate(asset.nextServiceDue) : 'N/A'}</Text>
             </View>
             
             <View style={styles.detailRow}>
@@ -289,10 +328,31 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
             <Text variant="titleMedium" style={styles.sectionTitle}>Quick Actions</Text>
             
             <View style={styles.actions}>
-              <Button mode="outlined" onPress={handleMarkSpare} style={styles.actionButton}>
+              {asset.status !== 'in-use' && (
+                <Button 
+                  mode="contained" 
+                  onPress={handleReturnToInUse} 
+                  style={styles.actionButton}
+                  buttonColor={theme.colors.primary}
+                >
+                  Return to In-Use
+                </Button>
+              )}
+              
+              <Button 
+                mode="outlined" 
+                onPress={handleMarkSpare} 
+                style={styles.actionButton}
+                disabled={asset.status === 'spare'}
+              >
                 Mark as Spare
               </Button>
-              <Button mode="outlined" onPress={handleMarkOutOfService} style={styles.actionButton}>
+              <Button 
+                mode="outlined" 
+                onPress={handleMarkOutOfService} 
+                style={styles.actionButton}
+                disabled={asset.status === 'out-of-service'}
+              >
                 Mark Out of Service
               </Button>
             </View>
@@ -305,6 +365,28 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         onPress={() => navigation.navigate('EditAsset', { assetId: asset.id })}
       />
+
+      {/* Out of Service Dialog */}
+      <Portal>
+        <Dialog visible={outOfServiceDialogVisible} onDismiss={() => setOutOfServiceDialogVisible(false)}>
+          <Dialog.Title>Mark Out of Service</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label="Reason *"
+              value={outOfServiceReason}
+              onChangeText={setOutOfServiceReason}
+              placeholder="Enter reason for out of service"
+              mode="outlined"
+              multiline
+              numberOfLines={3}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setOutOfServiceDialogVisible(false)}>Cancel</Button>
+            <Button onPress={confirmMarkOutOfService}>Confirm</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }

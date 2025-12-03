@@ -625,11 +625,15 @@ export const addServiceRecord = async (
     const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
     const updateData: Partial<Asset> = {
       lastServiceDate: formValues.serviceDate,
-      nextServiceDue: serviceRecord.nextServiceDue,
-      serviceStatus: getServiceStatus(serviceRecord.nextServiceDue),
       updatedAt: now,
       updatedBy: userId,
     };
+    
+    // Only include nextServiceDue and serviceStatus if they exist (avoid undefined in Firestore)
+    if (serviceRecord.nextServiceDue) {
+      updateData.nextServiceDue = serviceRecord.nextServiceDue;
+      updateData.serviceStatus = getServiceStatus(serviceRecord.nextServiceDue);
+    }
     
     await updateDoc(assetRef, updateData);
     
@@ -886,5 +890,38 @@ export const markOutOfService = async (
   } catch (error) {
     console.error('❌ Error marking out of service:', error);
     throw new Error('Failed to mark out of service');
+  }
+};
+
+/**
+ * Return asset to in-use status
+ */
+export const returnToInUse = async (
+  assetId: string,
+  userId: string,
+  userName: string
+): Promise<void> => {
+  try {
+    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    const updateData: any = {
+      status: 'in-use',
+      updatedAt: getCurrentISOString(),
+      updatedBy: userId,
+    };
+    
+    // Clear out of service reason if it exists
+    updateData.outOfServiceReason = '';
+    
+    await updateDoc(assetRef, updateData);
+    
+    await addHistoryEntry(assetId, {
+      userId,
+      userName,
+      action: 'status-changed',
+      description: 'Returned to in-use status',
+    });
+  } catch (error) {
+    console.error('❌ Error returning to in-use:', error);
+    throw new Error('Failed to return to in-use');
   }
 };

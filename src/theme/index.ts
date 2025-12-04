@@ -5,41 +5,94 @@
 
 import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 
-// Custom color palette - Professional, sophisticated, business-grade
+// World-Class 60-30-10 Color Palette
+// 60% - Neutral Foundation (backgrounds, surfaces)
+// 30% - Primary Brand (headers, key elements)
+// 10% - Accent (CTAs, important actions)
 const lightColors = {
-  primary: '#1565C0', // Professional Deep Blue
-  secondary: '#455A64', // Blue Grey - Sophisticated
-  success: '#2E7D32', // Professional Green
-  warning: '#F57C00', // Refined Orange
-  danger: '#C62828', // Professional Red
-  info: '#0288D1', // Info Blue
-  background: '#FAFAFA', // Clean White
-  surface: '#FFFFFF',
-  text: '#212121', // Pure Black Text
-  textSecondary: '#757575', // Medium Gray
-  border: '#E0E0E0',
-  disabled: '#BDBDBD',
-  accent: '#00838F', // Cyan Accent
-  gradient1: '#1565C0', // Deep Blue
-  gradient2: '#0D47A1', // Darker Blue
+  // 30% - Primary Brand Color (Deep Slate)
+  primary: '#2C3E50', // Sophisticated slate blue - main brand color
+  primaryLight: '#34495E', // Lighter variant
+  primaryDark: '#1A252F', // Darker variant
+  
+  // 10% - Accent Color (Vibrant Coral)
+  accent: '#FF6B6B', // Eye-catching coral - for CTAs and important actions
+  accentLight: '#FF8787', // Lighter variant for hover states
+  accentDark: '#E85555', // Darker variant
+  
+  // 60% - Neutral Foundation
+  background: '#F8F9FA', // 60% - Soft off-white for main backgrounds
+  surface: '#FFFFFF', // Pure white for cards and elevated surfaces
+  surfaceVariant: '#F1F3F5', // Subtle variant
+  
+  // Supporting Colors (minimal usage)
+  success: '#51CF66', // Fresh green
+  warning: '#FFA94D', // Warm orange
+  danger: '#FF6B6B', // Same as accent for consistency
+  info: '#4DABF7', // Sky blue
+  
+  // Text Colors
+  text: '#2C3E50', // Primary text matches brand
+  textSecondary: '#6C757D', // Muted gray for secondary text
+  textTertiary: '#ADB5BD', // Light gray for hints
+  
+  // Borders & Dividers
+  border: '#DEE2E6',
+  borderLight: '#E9ECEF',
+  disabled: '#CED4DA',
+  
+  // Gradients (Primary to Primary Dark)
+  gradient1: '#2C3E50',
+  gradient2: '#1A252F',
+  
+  // Status Colors (subtle, professional)
+  statusActive: '#51CF66',
+  statusSpare: '#4DABF7',
+  statusOutOfOrder: '#FFA94D',
+  statusRetired: '#ADB5BD',
 };
 
 const darkColors = {
-  primary: '#42A5F5', // Bright Blue
-  secondary: '#78909C', // Light Blue Grey
-  success: '#66BB6A', // Light Green
-  warning: '#FFA726', // Bright Orange
-  danger: '#EF5350', // Bright Red
-  info: '#29B6F6', // Light Blue
-  background: '#121212', // Material Dark
-  surface: '#1E1E1E', // Dark Surface
-  text: '#FFFFFF', // Pure White Text
-  textSecondary: '#B0BEC5', // Light Grey
-  border: '#424242',
-  disabled: '#616161',
-  accent: '#26C6DA', // Cyan Accent
-  gradient1: '#42A5F5', // Bright Blue
-  gradient2: '#1976D2', // Deep Blue
+  // 30% - Primary Brand Color (Lighter for dark mode)
+  primary: '#4A5F7F', // Muted slate for dark backgrounds
+  primaryLight: '#5C7599',
+  primaryDark: '#3A4F6F',
+  
+  // 10% - Accent Color (Vibrant Coral)
+  accent: '#FF6B6B',
+  accentLight: '#FF8787',
+  accentDark: '#E85555',
+  
+  // 60% - Neutral Foundation (Dark)
+  background: '#1A1D23', // 60% - Rich dark background
+  surface: '#25282E', // Elevated surface
+  surfaceVariant: '#2E3138',
+  
+  // Supporting Colors
+  success: '#51CF66',
+  warning: '#FFA94D',
+  danger: '#FF6B6B',
+  info: '#4DABF7',
+  
+  // Text Colors
+  text: '#F8F9FA', // Light text on dark
+  textSecondary: '#ADB5BD',
+  textTertiary: '#6C757D',
+  
+  // Borders & Dividers
+  border: '#343A40',
+  borderLight: '#3E444A',
+  disabled: '#495057',
+  
+  // Gradients
+  gradient1: '#4A5F7F',
+  gradient2: '#3A4F6F',
+  
+  // Status Colors
+  statusActive: '#51CF66',
+  statusSpare: '#4DABF7',
+  statusOutOfOrder: '#FFA94D',
+  statusRetired: '#6C757D',
 };
 
 export const lightTheme = {

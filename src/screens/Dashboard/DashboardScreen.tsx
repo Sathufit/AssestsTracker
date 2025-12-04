@@ -77,14 +77,14 @@ export default function DashboardScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'good':
-        return '#4CAF50';
+        return colors.success;
       case 'due-soon':
-        return '#FF9800';
+        return colors.warning;
       case 'overdue':
       case 'critical':
-        return '#F44336';
+        return colors.accent;
       default:
-        return '#9E9E9E';
+        return colors.textTertiary;
     }
   };
 
@@ -212,7 +212,7 @@ export default function DashboardScreen() {
     >
       {/* Modern Gradient Header */}
       <LinearGradient
-        colors={[theme.colors.primary, theme.colors.secondary]}
+        colors={[colors.primary, colors.primaryDark]}
         style={styles.header}
       >
         <Text variant="displayMedium" style={styles.headerTitle}>Asset Dashboard</Text>
@@ -248,15 +248,15 @@ export default function DashboardScreen() {
           <Text variant="titleLarge" style={styles.legendTitle}>Status Legend</Text>
           <View style={styles.legendGrid}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#26C281' }]} />
+              <View style={[styles.legendDot, { backgroundColor: '#51CF66' }]} />
               <Text variant="bodyLarge">All Good - No Issues</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#F39C12' }]} />
+              <View style={[styles.legendDot, { backgroundColor: '#FFA94D' }]} />
               <Text variant="bodyLarge">Service Due Soon</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#F44336' }]} />
+              <View style={[styles.legendDot, { backgroundColor: '#FF6B6B' }]} />
               <Text variant="bodyLarge">Overdue Service</Text>
             </View>
           </View>
@@ -269,7 +269,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#F8F9FA', // 60% - Neutral background
   },
   header: {
     padding: 32,
@@ -301,8 +301,9 @@ const styles = StyleSheet.create({
   // Category Card Styles
   categoryCard: {
     marginBottom: 24,
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF', // 60% - White surface
   },
   cardGradient: {
     padding: 24,
@@ -316,7 +317,6 @@ const styles = StyleSheet.create({
   categoryTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
   },
   categoryTitle: {
     fontWeight: 'bold',
@@ -331,15 +331,16 @@ const styles = StyleSheet.create({
   // Main Stats Grid
   mainStatsGrid: {
     flexDirection: 'row',
-    gap: 12,
     marginBottom: 16,
+    justifyContent: 'space-between',
   },
   mainStatBox: {
-    flex: 2,
+    flex: 3,
     padding: 20,
-    borderRadius: 16,
+    borderRadius: 12,
     alignItems: 'center',
     elevation: 2,
+    marginRight: 8,
   },
   mainStatNumber: {
     fontWeight: 'bold',
@@ -352,9 +353,10 @@ const styles = StyleSheet.create({
   statBox: {
     flex: 1,
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 12,
     alignItems: 'center',
     elevation: 2,
+    marginHorizontal: 4,
   },
   statNumber: {
     fontWeight: 'bold',
@@ -367,13 +369,13 @@ const styles = StyleSheet.create({
 
   // Service Status Alerts
   serviceStatusRow: {
-    gap: 12,
     marginBottom: 16,
   },
   alertBox: {
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
     elevation: 4,
+    marginBottom: 12,
   },
   alertGradient: {
     padding: 20,
@@ -393,7 +395,7 @@ const styles = StyleSheet.create({
   // Additional Stats
   additionalStats: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'space-between',
   },
   miniStatBox: {
     flex: 1,
@@ -401,6 +403,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     elevation: 1,
+    marginHorizontal: 4,
   },
 
   // Legend
@@ -414,11 +417,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   legendGrid: {
-    gap: 12,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
   },
   legendDot: {
     width: 32,

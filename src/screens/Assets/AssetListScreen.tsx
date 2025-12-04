@@ -4,22 +4,26 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { Text, Card, Searchbar, Chip, FAB, Menu, Button, useTheme, ActivityIndicator, Icon } from 'react-native-paper';
+import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { Text, Card, Searchbar, Chip, FAB, Menu, Button, useTheme, ActivityIndicator, Icon, Checkbox } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAssets } from '../../hooks';
+import { useAssets, useAuth } from '../../hooks';
 import { spacing } from '../../theme';
 import { getStatusColor, getServiceStatusColor, formatDisplayDate } from '../../utils/helpers';
 import { Asset } from '../../types';
+import { deleteAsset } from '../../api/assets';
 
 export default function AssetListScreen({ navigation, route }: any) {
   const theme = useTheme();
   const colors = theme.colors as any;
   const { assets, loading, error } = useAssets();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(route.params?.filter || null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
 
   // Get unique categories
   const categories = useMemo(() => {
@@ -57,15 +61,70 @@ export default function AssetListScreen({ navigation, route }: any) {
     });
   }, [assets, searchQuery, statusFilter, categoryFilter]);
 
+  const toggleSelection = (assetId: string) => {
+    const newSelected = new Set(selectedAssets);
+    if (newSelected.has(assetId)) {
+      newSelected.delete(assetId);
+    } else {
+      newSelected.add(assetId);
+    }
+    setSelectedAssets(newSelected);
+  };
+
+  const selectAll = () => {
+    setSelectedAssets(new Set(filteredAssets.map(a => a.id)));
+  };
+
+  const deselectAll = () => {
+    setSelectedAssets(new Set());
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedAssets.size === 0 || !user) return;
+
+    Alert.alert(
+      'Delete Assets',
+      `Are you sure you want to delete ${selectedAssets.size} asset(s)? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await Promise.all(
+                Array.from(selectedAssets).map(id => 
+                  deleteAsset(id, user.uid, user.displayName || user.email || 'Unknown')
+                )
+              );
+              Alert.alert('Success', `Deleted ${selectedAssets.size} asset(s)`);
+              setSelectedAssets(new Set());
+              setSelectionMode(false);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete some assets');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderAssetCard = ({ item }: { item: Asset }) => {
     const statusColor = item.status ? getStatusColor(item.status) : theme.colors.primary;
+    const isSelected = selectedAssets.has(item.id);
     
     return (
       <TouchableOpacity
-        onPress={() => navigation.navigate('AssetDetails', { assetId: item.id })}
+        onPress={() => selectionMode ? toggleSelection(item.id) : navigation.navigate('AssetDetails', { assetId: item.id })}
+        onLongPress={() => {
+          if (!selectionMode) {
+            setSelectionMode(true);
+            toggleSelection(item.id);
+          }
+        }}
         activeOpacity={0.7}
       >
-        <Card style={styles.card} elevation={3}>
+        <Card style={[styles.card, isSelected && styles.selectedCard]} elevation={3}>
           <LinearGradient
             colors={[statusColor + '08', statusColor + '03']}
             start={{ x: 0, y: 0 }}
@@ -74,6 +133,12 @@ export default function AssetListScreen({ navigation, route }: any) {
           >
             <Card.Content>
               <View style={styles.cardHeader}>
+                {selectionMode && (
+                  <Checkbox
+                    status={isSelected ? 'checked' : 'unchecked'}
+                    onPress={() => toggleSelection(item.id)}
+                  />
+                )}
                 <View style={{ flex: 1 }}>
                   <Text variant="titleLarge" style={[styles.assetNumber, { color: statusColor }]}>
                     {item.assetNumber || 'N/A'}
@@ -166,9 +231,34 @@ export default function AssetListScreen({ navigation, route }: any) {
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <Text variant="headlineSmall" style={styles.headerTitle}>
-          {filteredAssets.length} Assets
-        </Text>
+        <View style={styles.headerContent}>
+          <Text variant="headlineSmall" style={styles.headerTitle}>
+            {selectionMode ? `${selectedAssets.size} Selected` : `${filteredAssets.length} Assets`}
+          </Text>
+          {selectionMode && (
+            <View style={styles.selectionActions}>
+              <Button
+                mode="text"
+                textColor="#FFF"
+                onPress={selectedAssets.size === filteredAssets.length ? deselectAll : selectAll}
+                compact
+              >
+                {selectedAssets.size === filteredAssets.length ? 'Deselect All' : 'Select All'}
+              </Button>
+              <Button
+                mode="text"
+                textColor="#FFF"
+                onPress={() => {
+                  setSelectionMode(false);
+                  setSelectedAssets(new Set());
+                }}
+                compact
+              >
+                Cancel
+              </Button>
+            </View>
+          )}
+        </View>
       </LinearGradient>
 
       {/* Search Bar */}
@@ -294,13 +384,25 @@ export default function AssetListScreen({ navigation, route }: any) {
         />
       )}
 
-      {/* FAB for adding new asset */}
-      <FAB
-        icon="plus"
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        onPress={() => navigation.navigate('EditAsset', {})}
-        label="Add"
-      />
+      {/* FAB for adding new asset or bulk delete */}
+      {selectionMode && selectedAssets.size > 0 && (
+        <FAB
+          icon="delete"
+
+          style={[styles.deleteFab, { backgroundColor: '#FF6B6B' }]}
+          onPress={handleBulkDelete}
+          label={`Delete ${selectedAssets.size}`}
+        />
+      )}
+      
+      {!selectionMode && (
+        <FAB
+          icon="plus"
+          style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+          onPress={() => navigation.navigate('EditAsset', {})}
+          label="Add"
+        />
+      )}
     </View>
   );
 }
@@ -320,6 +422,15 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 16,
     marginBottom: 0,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  selectionActions: {
+    flexDirection: 'row',
+    gap: 8,
   },
   headerTitle: {
     color: '#FFFFFF',
@@ -371,6 +482,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 3,
+  },
+  selectedCard: {
+    borderWidth: 2,
+    borderColor: '#2C3E50', // Primary color
   },
   cardGradient: {
     paddingVertical: 12,
@@ -446,5 +561,12 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 0,
+  },
+  deleteFab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#C62828',
   },
 });

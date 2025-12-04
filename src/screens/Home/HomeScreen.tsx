@@ -40,7 +40,7 @@ export default function HomeScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Hero Section with Gradient */}
         <LinearGradient
-          colors={[colors.primary, colors.gradient2]}
+          colors={[colors.primary, colors.primaryDark]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
@@ -72,11 +72,11 @@ export default function HomeScreen({ navigation }: any) {
             <View style={styles.smallStatsColumn}>
               <Card style={styles.statCard} elevation={2}>
                 <LinearGradient
-                  colors={[colors.success + '15', colors.success + '05']}
+                  colors={[colors.primary + '15', colors.primary + '05']}
                   style={styles.statGradient}
                 >
-                  <Icon source="check-circle" size={24} color={colors.success} />
-                  <Text variant="headlineMedium" style={[styles.statNumber, { color: colors.success }]}>
+                  <Icon source="check-circle" size={24} color={colors.primary} />
+                  <Text variant="headlineMedium" style={[styles.statNumber, { color: colors.primary }]}>
                     {stats.inUse}
                   </Text>
                   <Text variant="bodyLarge" style={styles.statLabel}>In Use</Text>
@@ -85,11 +85,11 @@ export default function HomeScreen({ navigation }: any) {
               
               <Card style={styles.statCard} elevation={2}>
                 <LinearGradient
-                  colors={[colors.info + '15', colors.info + '05']}
+                  colors={[colors.primary + '15', colors.primary + '05']}
                   style={styles.statGradient}
                 >
-                  <Icon source="package-variant" size={24} color={colors.info} />
-                  <Text variant="headlineMedium" style={[styles.statNumber, { color: colors.info }]}>
+                  <Icon source="package-variant" size={24} color={colors.primary} />
+                  <Text variant="headlineMedium" style={[styles.statNumber, { color: colors.primary }]}>
                     {stats.spare}
                   </Text>
                   <Text variant="bodyLarge" style={styles.statLabel}>Spare</Text>
@@ -101,11 +101,11 @@ export default function HomeScreen({ navigation }: any) {
           <View style={styles.statsRow}>
             <Card style={styles.statCard} elevation={2}>
               <LinearGradient
-                colors={[colors.warning + '15', colors.warning + '05']}
+                colors={[colors.primary + '15', colors.primary + '05']}
                 style={styles.statGradient}
               >
-                <Icon source="wrench" size={28} color={colors.warning} />
-                <Text variant="headlineLarge" style={[styles.statNumber, { color: colors.warning }]}>
+                <Icon source="wrench" size={28} color={colors.primary} />
+                <Text variant="headlineLarge" style={[styles.statNumber, { color: colors.primary }]}>
                   {stats.outOfService}
                 </Text>
                 <Text variant="titleSmall" style={styles.statLabel}>Out of Service</Text>
@@ -114,11 +114,11 @@ export default function HomeScreen({ navigation }: any) {
             
             <Card style={styles.statCard} elevation={2}>
               <LinearGradient
-                colors={[colors.danger + '15', colors.danger + '05']}
+                colors={[colors.accent + '15', colors.accent + '05']}
                 style={styles.statGradient}
               >
-                <Icon source="alert-circle" size={28} color={colors.danger} />
-                <Text variant="headlineLarge" style={[styles.statNumber, { color: colors.danger }]}>
+                <Icon source="alert-circle" size={28} color={colors.accent} />
+                <Text variant="headlineLarge" style={[styles.statNumber, { color: colors.accent }]}>
                   {stats.overdue}
                 </Text>
                 <Text variant="titleSmall" style={styles.statLabel}>Overdue</Text>
@@ -127,11 +127,11 @@ export default function HomeScreen({ navigation }: any) {
             
             <Card style={styles.statCard} elevation={2}>
               <LinearGradient
-                colors={[colors.accent + '15', colors.accent + '05']}
+                colors={[colors.primary + '15', colors.primary + '05']}
                 style={styles.statGradient}
               >
-                <Icon source="clock-alert" size={28} color={colors.accent} />
-                <Text variant="headlineLarge" style={[styles.statNumber, { color: colors.accent }]}>
+                <Icon source="clock-alert" size={28} color={colors.primary} />
+                <Text variant="headlineLarge" style={[styles.statNumber, { color: colors.primary }]}>
                   {stats.dueSoon}
                 </Text>
                 <Text variant="titleSmall" style={styles.statLabel}>Due Soon</Text>
@@ -156,7 +156,7 @@ export default function HomeScreen({ navigation }: any) {
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: colors.secondary }]}
+                style={[styles.actionButton, { backgroundColor: colors.accent }]}
                 onPress={() => navigation.navigate('Scanner')}
                 activeOpacity={0.7}
               >
@@ -165,7 +165,7 @@ export default function HomeScreen({ navigation }: any) {
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: colors.success }]}
+                style={[styles.actionButton, { backgroundColor: colors.primary }]}
                 onPress={() => navigation.navigate('EditAsset', {})}
                 activeOpacity={0.7}
               >
@@ -174,7 +174,7 @@ export default function HomeScreen({ navigation }: any) {
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: colors.warning }]}
+                style={[styles.actionButton, { backgroundColor: colors.primaryLight }]}
                 onPress={() => navigation.navigate('Import')}
                 activeOpacity={0.7}
               >
@@ -183,7 +183,7 @@ export default function HomeScreen({ navigation }: any) {
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: colors.info }]}
+                style={[styles.actionButton, { backgroundColor: colors.primaryLight }]}
                 onPress={() => navigation.navigate('Dashboard')}
                 activeOpacity={0.7}
               >
@@ -205,7 +205,7 @@ export default function HomeScreen({ navigation }: any) {
 
       <FAB
         icon="qrcode-scan"
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        style={[styles.fab, { backgroundColor: colors.accent }]}
         onPress={() => navigation.navigate('Scanner')}
         label="Scan"
       />
@@ -300,7 +300,6 @@ const styles = StyleSheet.create({
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
     justifyContent: 'space-between',
   },
   actionButton: {
@@ -315,6 +314,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
+    marginBottom: spacing.md,
   },
   actionButtonText: {
     color: '#FFF',

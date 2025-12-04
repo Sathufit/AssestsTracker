@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Image } from 'react-native';
-import { Text, Card, Button, Chip, FAB, useTheme, ActivityIndicator, Dialog, Portal, TextInput } from 'react-native-paper';
-import { getAssetById, markAsSpare, markOutOfService, assignToRoom, returnToInUse } from '../../api/assets';
+import { Text, Card, Button, Chip, FAB, useTheme, ActivityIndicator, Dialog, Portal, TextInput, IconButton } from 'react-native-paper';
+import { getAssetById, markAsSpare, markOutOfService, assignToRoom, returnToInUse, deleteAsset } from '../../api/assets';
 import { Asset } from '../../types';
 import { spacing } from '../../theme';
 import { formatDisplayDate, getStatusColor, getServiceStatusColor, formatCurrency } from '../../utils/helpers';
@@ -98,7 +98,32 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
               Alert.alert('Success', 'Asset returned to in-use status');
               loadAsset();
             } catch (error) {
-              Alert.alert('Error', 'Failed to return to in-use');
+              Alert.alert('Error', 'Failed to return asset to in-use');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleDeleteAsset = async () => {
+    if (!asset || !user) return;
+    
+    Alert.alert(
+      'Delete Asset',
+      'Are you sure you want to delete this asset? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAsset(asset.id, user.uid, user.displayName || user.email || 'Unknown');
+              Alert.alert('Success', 'Asset deleted successfully');
+              navigation.goBack();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete asset');
             }
           }
         }
@@ -327,35 +352,48 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
           <Card.Content>
             <Text variant="titleMedium" style={styles.sectionTitle}>Quick Actions</Text>
             
-            <View style={styles.actions}>
-              {asset.status !== 'in-use' && (
+            {asset.status !== 'in-use' && (
+              <Button 
+                mode="contained" 
+                onPress={handleReturnToInUse} 
+                style={styles.actionButtonFull}
+                buttonColor={theme.colors.primary}
+              >
+                Return to In-Use
+              </Button>
+            )}
+            
+            <View style={styles.actionRow}>
+              <View style={styles.actionButtonContainer}>
                 <Button 
-                  mode="contained" 
-                  onPress={handleReturnToInUse} 
-                  style={styles.actionButton}
-                  buttonColor={theme.colors.primary}
+                  mode="outlined" 
+                  onPress={handleMarkSpare} 
+                  disabled={asset.status === 'spare'}
+                  contentStyle={styles.buttonContent}
                 >
-                  Return to In-Use
+                  Mark as Spare
                 </Button>
-              )}
-              
-              <Button 
-                mode="outlined" 
-                onPress={handleMarkSpare} 
-                style={styles.actionButton}
-                disabled={asset.status === 'spare'}
-              >
-                Mark as Spare
-              </Button>
-              <Button 
-                mode="outlined" 
-                onPress={handleMarkOutOfService} 
-                style={styles.actionButton}
-                disabled={asset.status === 'out-of-service'}
-              >
-                Mark Out of Service
-              </Button>
+              </View>
+              <View style={styles.actionButtonContainer}>
+                <Button 
+                  mode="outlined" 
+                  onPress={handleMarkOutOfService} 
+                  disabled={asset.status === 'out-of-service'}
+                  contentStyle={styles.buttonContent}
+                >
+                  Out of Service
+                </Button>
+              </View>
             </View>
+            
+            <Button 
+              mode="contained" 
+              onPress={handleDeleteAsset} 
+              style={[styles.actionButtonFull, styles.deleteButton]}
+              buttonColor="#FF6B6B"
+            >
+              Delete Asset
+            </Button>
           </Card.Content>
         </Card>
       </ScrollView>
@@ -457,11 +495,29 @@ const styles = StyleSheet.create({
   serviceButton: {
     marginTop: spacing.md,
   },
-  actions: {
-    gap: spacing.sm,
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+    width: '100%',
+  },
+  actionButtonContainer: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  buttonContent: {
+    width: '100%',
   },
   actionButton: {
-    marginBottom: spacing.xs,
+    flex: 1,
+    marginRight: spacing.xs,
+  },
+  actionButtonFull: {
+    marginTop: spacing.sm,
+    width: '100%',
+  },
+  deleteButton: {
+    backgroundColor: '#C62828',
   },
   fab: {
     position: 'absolute',

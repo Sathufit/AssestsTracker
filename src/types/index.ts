@@ -113,6 +113,7 @@ export type HistoryAction =
   | 'location-changed'
   | 'service-completed'
   | 'image-added'
+  | 'deleted'
   | 'image-removed';
 
 // ============================================

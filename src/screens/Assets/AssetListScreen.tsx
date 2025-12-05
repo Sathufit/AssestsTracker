@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { Text, Card, Searchbar, Chip, FAB, Menu, Button, useTheme, ActivityIndicator, Icon, Checkbox } from 'react-native-paper';
+import { Text, Card, Searchbar, Chip, FAB, Menu, Button, useTheme, ActivityIndicator, Icon, Checkbox, Dialog, Portal } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAssets, useAuth } from '../../hooks';
 import { spacing } from '../../theme';
@@ -24,6 +24,8 @@ export default function AssetListScreen({ navigation, route }: any) {
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get unique categories
   const categories = useMemo(() => {
@@ -80,33 +82,41 @@ export default function AssetListScreen({ navigation, route }: any) {
   };
 
   const handleBulkDelete = () => {
-    if (selectedAssets.size === 0 || !user) return;
+    console.log('🔥 handleBulkDelete called', { selectedCount: selectedAssets.size, user });
+    if (selectedAssets.size === 0 || !user) {
+      console.log('❌ No assets selected or no user');
+      Alert.alert('Error', 'Cannot delete: No assets selected or user not logged in');
+      return;
+    }
+    console.log('🔥 Showing delete dialog');
+    setDeleteDialogVisible(true);
+  };
 
-    Alert.alert(
-      'Delete Assets',
-      `Are you sure you want to delete ${selectedAssets.size} asset(s)? This action cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await Promise.all(
-                Array.from(selectedAssets).map(id => 
-                  deleteAsset(id, user.uid, user.displayName || user.email || 'Unknown')
-                )
-              );
-              Alert.alert('Success', `Deleted ${selectedAssets.size} asset(s)`);
-              setSelectedAssets(new Set());
-              setSelectionMode(false);
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete some assets');
-            }
-          }
-        }
-      ]
-    );
+  const confirmBulkDelete = async () => {
+    if (!user) return;
+    
+    console.log('🔥 User confirmed bulk delete - starting deletion');
+    setIsDeleting(true);
+    try {
+      const deletePromises = Array.from(selectedAssets).map(id => {
+        console.log('🔥 Deleting asset:', id);
+        return deleteAsset(id, user.uid, user.displayName || user.email || 'Unknown');
+      });
+      
+      console.log('🔥 Waiting for all deletes to complete...');
+      await Promise.all(deletePromises);
+      console.log('🔥 All deletes completed successfully');
+      
+      Alert.alert('Success', `Deleted ${selectedAssets.size} asset(s)`);
+      setSelectedAssets(new Set());
+      setSelectionMode(false);
+      setDeleteDialogVisible(false);
+    } catch (error: any) {
+      console.error('❌ Bulk delete failed:', error);
+      Alert.alert('Error', error.message || 'Failed to delete some assets');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const renderAssetCard = ({ item }: { item: Asset }) => {
@@ -388,7 +398,6 @@ export default function AssetListScreen({ navigation, route }: any) {
       {selectionMode && selectedAssets.size > 0 && (
         <FAB
           icon="delete"
-
           style={[styles.deleteFab, { backgroundColor: '#FF6B6B' }]}
           onPress={handleBulkDelete}
           label={`Delete ${selectedAssets.size}`}
@@ -403,6 +412,31 @@ export default function AssetListScreen({ navigation, route }: any) {
           label="Add"
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Portal>
+        <Dialog visible={deleteDialogVisible} onDismiss={() => setDeleteDialogVisible(false)}>
+          <Dialog.Title>Delete Assets</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">
+              Are you sure you want to delete {selectedAssets.size} asset(s)? This action cannot be undone.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDeleteDialogVisible(false)} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button 
+              onPress={confirmBulkDelete} 
+              loading={isDeleting}
+              disabled={isDeleting}
+              textColor={colors.accent}
+            >
+              Delete
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }

@@ -20,6 +20,8 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [outOfServiceDialogVisible, setOutOfServiceDialogVisible] = useState(false);
   const [outOfServiceReason, setOutOfServiceReason] = useState('');
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadAsset();
@@ -106,29 +108,34 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
     );
   };
 
-  const handleDeleteAsset = async () => {
+  const handleDeleteAsset = () => {
+    console.log('🔥 handleDeleteAsset called', { asset, user });
+    if (!asset || !user) {
+      console.log('❌ Missing asset or user');
+      Alert.alert('Error', 'Cannot delete: Missing asset or user information');
+      return;
+    }
+    console.log('🔥 Showing delete dialog');
+    setDeleteDialogVisible(true);
+  };
+
+  const confirmDelete = async () => {
     if (!asset || !user) return;
     
-    Alert.alert(
-      'Delete Asset',
-      'Are you sure you want to delete this asset? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteAsset(asset.id, user.uid, user.displayName || user.email || 'Unknown');
-              Alert.alert('Success', 'Asset deleted successfully');
-              navigation.goBack();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete asset');
-            }
-          }
-        }
-      ]
-    );
+    console.log('🔥 User confirmed delete - starting deletion');
+    setIsDeleting(true);
+    try {
+      await deleteAsset(asset.id, user.uid, user.displayName || user.email || 'Unknown');
+      console.log('🔥 Asset deleted successfully');
+      Alert.alert('Success', 'Asset deleted successfully');
+      setDeleteDialogVisible(false);
+      navigation.goBack();
+    } catch (error: any) {
+      console.error('❌ Delete failed:', error);
+      Alert.alert('Error', error.message || 'Failed to delete asset');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (loading) {
@@ -422,6 +429,29 @@ export default function AssetDetailsScreen({ route, navigation }: any) {
           <Dialog.Actions>
             <Button onPress={() => setOutOfServiceDialogVisible(false)}>Cancel</Button>
             <Button onPress={confirmMarkOutOfService}>Confirm</Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog visible={deleteDialogVisible} onDismiss={() => setDeleteDialogVisible(false)}>
+          <Dialog.Title>Delete Asset</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">
+              Are you sure you want to delete this asset? This action cannot be undone.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDeleteDialogVisible(false)} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button 
+              onPress={confirmDelete} 
+              loading={isDeleting}
+              disabled={isDeleting}
+              textColor={theme.colors.primary}
+            >
+              Delete
+            </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

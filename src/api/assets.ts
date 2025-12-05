@@ -302,27 +302,48 @@ export const deleteAsset = async (
   userName: string
 ): Promise<void> => {
   try {
-    const assetRef = doc(getDB(), COLLECTIONS.ASSETS, assetId);
+    console.log('🔥 Starting deleteAsset:', { assetId, userId, userName });
     
-    await updateDoc(assetRef, {
-      status: 'retired',
-      updatedAt: getCurrentISOString(),
-      updatedBy: userId,
-    });
+    // Verify we have a database connection
+    const db = getDB();
+    if (!db) {
+      throw new Error('Database not initialized');
+    }
+    console.log('🔥 Database connection verified');
     
+    const assetRef = doc(db, COLLECTIONS.ASSETS, assetId);
+    console.log('🔥 Asset ref created:', assetRef.path);
+    
+    // Check if asset exists first
+    const assetDoc = await getDoc(assetRef);
+    if (!assetDoc.exists()) {
+      throw new Error('Asset not found');
+    }
+    console.log('🔥 Asset exists, current status:', assetDoc.data()?.status);
+    
+    // Add history entry before deleting
+    console.log('🔥 Adding history entry...');
     await addHistoryEntry(assetId, {
       userId,
       userName,
-      action: 'status-changed',
-      description: 'Asset retired/deleted',
-      oldValue: 'active',
-      newValue: 'retired',
+      action: 'deleted',
+      description: 'Asset permanently deleted',
+      oldValue: assetDoc.data()?.status || 'unknown',
+      newValue: 'deleted',
     });
     
-    console.log('✅ Asset deleted (retired):', assetId);
-  } catch (error) {
+    // Permanently delete the asset document
+    console.log('🔥 Permanently deleting asset document...');
+    await deleteDoc(assetRef);
+    console.log('✅ Asset permanently deleted:', assetId);
+  } catch (error: any) {
     console.error('❌ Error deleting asset:', error);
-    throw new Error('Failed to delete asset');
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    });
+    throw new Error(`Failed to delete asset: ${error.message}`);
   }
 };
 

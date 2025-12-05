@@ -70,7 +70,7 @@ export default function HomeScreen({ navigation }: any) {
             </Card>
             
             <View style={styles.smallStatsColumn}>
-              <Card style={styles.statCard} elevation={2}>
+              <Card style={[styles.statCard, { marginBottom: spacing.md }]} elevation={2}>
                 <LinearGradient
                   colors={[colors.primary + '15', colors.primary + '05']}
                   style={styles.statGradient}
@@ -83,7 +83,7 @@ export default function HomeScreen({ navigation }: any) {
                 </LinearGradient>
               </Card>
               
-              <Card style={styles.statCard} elevation={2}>
+              <Card style={[styles.statCard, { marginRight: 0 }]} elevation={2}>
                 <LinearGradient
                   colors={[colors.primary + '15', colors.primary + '05']}
                   style={styles.statGradient}
@@ -125,7 +125,7 @@ export default function HomeScreen({ navigation }: any) {
               </LinearGradient>
             </Card>
             
-            <Card style={styles.statCard} elevation={2}>
+            <Card style={[styles.statCard, { marginRight: 0 }]} elevation={2}>
               <LinearGradient
                 colors={[colors.primary + '15', colors.primary + '05']}
                 style={styles.statGradient}
@@ -253,17 +253,17 @@ const styles = StyleSheet.create({
   // Statistics
   statsContainer: {
     marginBottom: spacing.lg,
-    gap: spacing.md,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: spacing.md,
+    marginBottom: spacing.md,
   },
   statCard: {
     flex: 1,
     borderRadius: 12,
     overflow: 'hidden',
     minHeight: 120,
+    marginRight: spacing.md,
   },
   statGradient: {
     flex: 1,
@@ -276,7 +276,6 @@ const styles = StyleSheet.create({
   },
   smallStatsColumn: {
     flex: 1,
-    gap: spacing.md,
   },
   statNumber: {
     fontWeight: 'bold',
